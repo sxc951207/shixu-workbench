@@ -1,0 +1,1512 @@
+/* Company workspace only. Load after the feature styles; presentation stays independent. */
+.company-app,
+.company-login,
+.co-modal,
+.co-reauth {
+  --co-bg: #183247;
+  --co-panel: #28485f;
+  --co-panel-light: #31546c;
+  --co-text: #f1f7fc;
+  --co-muted: #c0d1df;
+  --co-line: #92b5ce38;
+  --co-accent: #a1e9f5;
+  color: var(--co-text);
+  color-scheme: dark;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.company-app {
+  background: radial-gradient(ellipse at 85% 0, #3c718b26, transparent 48%), var(--co-bg);
+}
+
+.company-app .co-sidebar {
+  background: #1b374dec;
+  box-shadow: 5px 0 25px #071e2f12;
+}
+
+.company-app .co-topbar {
+  background: #1b374d9c;
+}
+
+.company-app .co-topbar > span,
+.company-app .co-company-switch > label {
+  color: var(--co-muted);
+  font-size: 13px;
+}
+
+.company-app .co-shell > main {
+  padding-top: 24px;
+}
+
+.company-app .co-brand small,
+.company-app .co-sidebar-caption,
+.company-app .co-sidebar-foot,
+.company-app .co-sidebar-foot strong {
+  color: #bdd1e1;
+  font-size: 12px;
+}
+
+.company-app .co-brand small {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+}
+
+.company-app .co-sidebar nav {
+  gap: 6px;
+}
+
+.company-app .co-sidebar-foot > :is(a, button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+  border-radius: 8px;
+}
+
+.company-app .co-sidebar nav button {
+  color: #d0dfeb;
+  font-size: 14px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.company-app .co-sidebar nav button.selected {
+  background: linear-gradient(100deg, #82d9ec28, #7bc5e00e);
+  border-color: #acdfea45;
+  color: #d9f8ff;
+  box-shadow: inset 3px 0 #a0eafa;
+}
+
+.company-app .co-company-switch select {
+  min-height: 44px;
+  font-size: 14px;
+  background: #2c4e66;
+  border-color: #7a9db66b;
+}
+
+.company-app .co-small {
+  color: #b1c8d9;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.company-app .co-page-heading {
+  margin: 27px 0 22px;
+}
+
+.company-app .co-eyebrow {
+  color: #b1deed;
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  margin-bottom: 9px;
+}
+
+.company-app .co-page-heading h1 {
+  font-size: clamp(24px, 2.25vw, 29px);
+  letter-spacing: -.35px;
+  line-height: 1.4;
+  text-wrap: balance;
+}
+
+.company-app .co-page-heading > div > p:last-child {
+  margin-top: 9px;
+  font-size: 14px;
+  line-height: 1.75;
+  max-width: 740px;
+}
+
+.company-app .co-page-heading.co-compact-heading {
+  margin-top: 21px;
+  margin-bottom: 21px;
+  padding-bottom: 19px;
+  border-bottom: 1px solid var(--co-line);
+}
+
+.company-app .co-compact-heading h1 {
+  font-size: 23px;
+}
+
+.company-app .co-compact-heading .co-eyebrow {
+  margin-bottom: 5px;
+}
+
+.company-app .co-compact-heading > div > p:last-child {
+  margin-top: 5px;
+  font-size: 13px;
+}
+
+.company-app .co-panel,
+.company-app .co-project-card {
+  background: linear-gradient(125deg, #2c4c65, #244158);
+  border-color: #90b4cf42;
+  box-shadow: 0 7px 22px #071b2c16;
+}
+
+.company-app .co-panel {
+  padding: 23px 25px;
+  border-radius: 15px;
+}
+
+.company-app .co-project-grid {
+  gap: 18px;
+}
+
+.company-app .co-project-card {
+  border-radius: 15px;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.company-app .co-project-card::before {
+  background: linear-gradient(90deg, transparent, #c3e5f275, transparent);
+}
+
+.company-app .co-project-card h2 {
+  margin-top: 16px;
+  color: #f4f9fc;
+}
+
+.company-app .co-panel p,
+.company-app .co-project-card dd,
+.co-modal .co-report-details section > p,
+.co-modal .co-history p {
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.company-app .co-project-card dd {
+  color: #e4eef6;
+}
+
+.company-app .co-project-card dt,
+.company-app .co-project-people,
+.company-app .co-report-card .co-project-people,
+.company-app .co-progress-heading,
+.company-app .co-review-comment {
+  color: #bfd3e3;
+  font-size: 13px;
+}
+
+.company-app .co-project-people {
+  margin-bottom: 21px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.company-app .co-card-top > small,
+.company-app .co-updated,
+.company-app .co-stats small,
+.company-app .co-member-row small,
+.company-app .co-checkpoint small,
+.co-modal .co-history summary small,
+.co-modal .co-checks small {
+  color: #b7cddd;
+  font-size: 12px;
+}
+
+.company-app .co-status {
+  padding: 5px 9px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #d4e4f0;
+  border-color: #b3d6ef38;
+}
+
+.company-app .co-status.submitted {
+  color: #ffe3a3;
+  background: #c6a74b1f;
+}
+
+.company-app .co-status.returned {
+  color: #ffd0bf;
+  background: #c9836720;
+}
+
+.company-app .co-status.approved {
+  color: #b5f3da;
+  background: #72c8a620;
+}
+
+.company-app .co-progress {
+  height: 7px;
+  background: #102f476b;
+  margin-bottom: 21px;
+}
+
+.company-app .co-progress > i {
+  background: linear-gradient(90deg, #87cada, #b0edf6);
+  box-shadow: none;
+}
+
+.company-app .co-section-head p,
+.company-app .co-muted,
+.co-modal .co-muted,
+.co-reauth .co-muted {
+  color: var(--co-muted);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.company-app .co-stats {
+  gap: 14px;
+  margin-bottom: 21px;
+}
+
+.company-app .co-stats > span {
+  min-height: 76px;
+  padding: 17px 21px;
+  color: #c6dbe9;
+  background: #9ac5df09;
+  font-size: 13px;
+}
+
+.company-app .co-stats .co-stat-flow {
+  line-height: 1.6;
+}
+
+.company-app .co-card-actions {
+  gap: 6px;
+}
+
+:is(.company-app, .company-login, .co-modal, .co-reauth) :is(.co-primary, .co-text, .co-icon),
+.company-app :is(.co-comparison-button, .co-presentation-button),
+.rc-dialog :is(.rc-close, .rc-footer button) {
+  min-height: 44px;
+  font-size: 14px;
+}
+
+:is(.company-app, .company-login, .co-modal, .co-reauth) .co-primary {
+  background: #a0e6f2;
+  color: #123044;
+  border-radius: 9px;
+  box-shadow: 0 3px 9px #071e2b21;
+}
+
+:is(.company-app, .company-login, .co-modal, .co-reauth) .co-text {
+  color: #d0f0fa;
+}
+
+:is(.company-app, .company-login, .co-modal, .co-reauth) .co-icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  background: #bfdcee0c;
+  border-color: #a8c8e244;
+}
+
+.company-app .co-card-actions :is(.co-primary, .co-text),
+.company-app .co-member-row > div:last-child button,
+.company-app .co-checkpoint .co-text {
+  min-height: 44px;
+  font-size: 13px;
+}
+
+:is(.company-app, .company-login, .co-modal, .co-reauth, .rc-dialog) button,
+:is(.company-app, .company-login, .co-modal, .co-reauth, .rc-dialog) a {
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease,
+    box-shadow 160ms ease, transform 160ms ease;
+  -webkit-tap-highlight-color: #a0e6f226;
+  touch-action: manipulation;
+}
+
+:is(.company-app, .company-login, .co-modal, .co-reauth, .rc-dialog) button:disabled,
+:is(.company-app, .company-login, .co-modal, .co-reauth) fieldset:disabled button {
+  cursor: not-allowed;
+  opacity: .52;
+  transform: none;
+  box-shadow: none;
+}
+
+:is(.company-app, .company-login, .co-modal, .co-reauth, .rc-dialog)
+  :is(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid #b0eeff;
+  outline-offset: 3px;
+}
+
+:is(.company-app, .company-login, .co-modal, .co-reauth)
+  :is(input, select, textarea):not([type="checkbox"]):focus-visible {
+  border-color: #b0eeff;
+  outline-width: 2px;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px #a4e7f214;
+}
+
+.company-app :is(.co-pagination button, .co-policy select) {
+  min-height: 44px;
+  font-size: 14px;
+}
+
+.company-app .co-pagination {
+  gap: 15px;
+  font-size: 13px;
+}
+
+.company-app .co-policy-tags span,
+.company-app .co-checkpoint strong {
+  font-size: 13px;
+  color: #c3dfed;
+}
+
+.company-app .co-shell > main > footer {
+  color: #adc4d6;
+  font-size: 12px;
+  margin-top: 29px;
+  padding-top: 19px;
+}
+
+.company-app .co-empty {
+  min-height: 220px;
+  padding: 30px 24px;
+  border-color: #a6c8df55;
+  background: #88c4dd09;
+}
+
+.company-app .co-empty p {
+  color: #c0d4e4;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.company-app .co-empty h2 {
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+/* Optional empty-state help, without adding or hiding any action. */
+.company-app .co-empty-steps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 18px;
+  margin: 4px 0 10px;
+  padding: 0;
+  list-style-position: inside;
+  color: #c6dbe9;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.company-app .co-demo-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 9px 14px;
+  border: 1px solid #b2dfeb59;
+  border-radius: 9px;
+  color: #d5f3fc;
+  background: #addfeb10;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.company-app .co-demo-link.co-primary {
+  color: #123044;
+  background: #a0e6f2;
+  border-color: transparent;
+}
+
+.company-app .co-demo-link.co-primary svg {
+  color: currentColor;
+}
+
+.company-app .co-empty-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.company-app .co-empty .co-demo-caption {
+  color: #b9d0e0;
+  font-size: 13px;
+  max-width: 480px;
+  margin-top: 5px;
+}
+
+.company-app .co-setup-guide {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 15px 18px;
+  margin-bottom: 20px;
+  border: 1px solid #b2d9e34d;
+  border-radius: 12px;
+  color: #c9deec;
+  background: #a3d4e30b;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.company-app .co-setup-guide > span {
+  min-width: 0;
+}
+
+.company-app .co-setup-guide strong {
+  display: block;
+  color: #e6f6fe;
+  margin-bottom: 2px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.company-app .co-setup-guide button {
+  flex-shrink: 0;
+}
+
+.co-modal,
+.co-reauth {
+  background: #28485f;
+  border-color: #93b6ce70;
+  box-shadow: 0 28px 100px #041321a6;
+  scrollbar-color: #83a6bf #203e54;
+}
+
+.co-modal::backdrop,
+.co-reauth::backdrop,
+.rc-dialog::backdrop {
+  background: #081d2bbd;
+  backdrop-filter: blur(4px);
+}
+
+.co-modal > p,
+.co-reauth > p {
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+:is(.co-modal, .co-reauth, .company-login) label {
+  color: #d6e5ef;
+  font-size: 14px;
+}
+
+:is(.co-modal, .co-reauth, .company-login) input:not([type="checkbox"]),
+:is(.co-modal, .co-reauth) :is(select, textarea) {
+  min-height: 44px;
+  background: #19364b;
+  color: #f0f7fc;
+  border-color: #91b3ce66;
+  border-radius: 9px;
+  line-height: 1.7;
+}
+
+:is(.company-app, .co-modal, .co-reauth, .company-login) input::placeholder,
+:is(.company-app, .co-modal, .co-reauth) textarea::placeholder {
+  color: #abc2d4;
+  opacity: 1;
+}
+
+.co-modal :is(.co-checks label, .co-checkbox),
+.company-app .cdt-check {
+  min-height: 44px;
+}
+
+.co-modal :is(.co-checks input, .co-checkbox input),
+.company-app .cdt-check input {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  accent-color: #a0e6f2;
+}
+
+.co-modal .co-history summary,
+.co-modal .co-report-reference summary {
+  min-height: 44px;
+  padding: 7px 0;
+  color: #d0e4f1;
+  font-size: 14px;
+}
+
+.co-modal .co-report-details h3,
+.co-modal .co-source-entry,
+.co-modal .co-source-entry strong,
+.co-modal .co-report-reference .co-muted {
+  color: #c6dbe9;
+  font-size: 13px;
+}
+
+.co-modal .co-source-entry p {
+  font-size: 14px;
+}
+
+.company-login {
+  background: radial-gradient(ellipse at 65% 10%, #477f9c38, transparent 52%), #183247;
+}
+
+.company-login .co-login-card {
+  background: #2b4c64d9;
+  border-color: #9ec6e14f;
+}
+
+.company-login .co-login-card > p {
+  font-size: 14px;
+  color: #c9dce9;
+}
+
+.company-login .co-login-card > small {
+  color: #b9cfdf;
+  font-size: 12px;
+}
+
+.company-login .co-auth-tabs button {
+  min-height: 44px;
+  font-size: 14px;
+  color: #c5dbe9;
+}
+
+.company-login .co-help {
+  color: #bfd5e4 !important;
+  font-size: 13px !important;
+}
+
+/* Shared filters and project delivery. */
+.company-app :is(.dl-controls, .co-report-toolbar) {
+  background: #122f432b;
+  border-color: #9bbbd43d;
+  gap: 14px;
+}
+
+.company-app :is(.dl-controls, .co-report-toolbar) > label {
+  color: #c7dce9;
+  font-size: 13px;
+}
+
+.company-app .dl-controls select,
+.company-app .co-report-toolbar :is(input, select) {
+  height: 44px;
+  background: #25475f;
+  color: #eff7fc;
+  border-color: #8faec66b;
+  font-size: 14px;
+}
+
+.company-app :is(.dl-views, .co-report-kinds) {
+  background: #17364c;
+  border-color: #8ab3cd47;
+}
+
+.company-app :is(.dl-views, .co-report-kinds) button {
+  min-height: 44px;
+  padding: 9px 12px;
+  color: #c4d8e7;
+  font-size: 14px;
+}
+
+.company-app :is(.dl-views, .co-report-kinds) button.selected {
+  color: #e3f9ff;
+  background: #9edbed2a;
+  box-shadow: inset 0 0 0 1px #bbebf332;
+}
+
+.company-app :is(.co-delivery, .co-reports) > .co-section-head h2 {
+  font-size: 22px;
+}
+
+.company-app .co-report-heading-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.company-app :is(.co-report-period, .co-report-period strong) {
+  font-size: 14px;
+}
+
+.company-app .co-report-period > span {
+  color: #c0d4e3;
+  font-size: 13px;
+}
+
+.company-app .co-report-help,
+.company-app .co-report-wait {
+  color: #f4dfb8;
+  font-size: 13px;
+  background: #b89c4814;
+}
+
+.company-app .co-report-help strong {
+  color: #edcf98;
+  font-size: 12px;
+}
+
+.company-app .dl-stats > span {
+  color: #c5dbe9;
+  font-size: 13px;
+  background: #bfdff008;
+}
+
+.company-app .dl-project-head small,
+.company-app .dl-item-meta,
+.company-app .dl-inbox p,
+.company-app .dl-inbox p > strong,
+.company-app .dl-awaiting,
+.company-app .dl-no-items {
+  font-size: 13px;
+  color: #c5dae8;
+  line-height: 1.8;
+}
+
+.company-app .dl-item h4 {
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 550;
+}
+
+.company-app .dl-item-notes {
+  color: #d3e4ef;
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.company-app :is(.dl-kind, .dl-state) {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.company-app .dl-kind {
+  color: #c5dbe9;
+  border-color: #9ebed64d;
+}
+
+.company-app :is(.dl-completed-time, .dl-project-foot > span, .dl-inbox small) {
+  color: #bfd4e3;
+  font-size: 12px;
+}
+
+.company-app .dl-last-nudge {
+  font-size: 12px;
+  color: #efd6a3;
+}
+
+.company-app .dl-complete {
+  width: 44px;
+  height: 44px;
+  flex-basis: 44px;
+  margin-top: 0;
+  border-radius: 10px;
+  border-color: #b4d8e58a;
+  background: #a2c5db0e;
+}
+
+.company-app .dl-complete.checked {
+  border-color: #afdec99e;
+  background: #8cd7b72e;
+  color: #caf5df;
+}
+
+.company-app :is(.dl-item-actions, .dl-add-actions) button,
+.company-app .dl-project-foot button,
+.company-app .dl-awaiting .co-text {
+  min-height: 44px;
+  font-size: 13px;
+}
+
+.company-app .dl-item-actions {
+  gap: 4px;
+  max-width: 185px;
+}
+
+.company-app .dl-timeline-scroll {
+  scrollbar-color: #8cafc7 #1c3c53;
+  overscroll-behavior-x: contain;
+}
+
+.company-app .dl-timeline-header,
+.company-app .dl-timeline-header > strong,
+.company-app .dl-timeline-row strong {
+  color: #d6e9f4;
+  font-size: 13px;
+}
+
+.company-app .dl-timeline-header > strong > span,
+.company-app .dl-timeline-row small,
+.company-app .dl-timeline-bar > span {
+  color: #c5dce9;
+  font-size: 12px;
+}
+
+.company-app .dl-timeline-bar {
+  background: #8ecfe34d;
+}
+
+.company-app .dl-timeline-bar.overdue {
+  background: #c77b6d59;
+}
+
+.company-app .dl-timeline-bar.soon {
+  background: #bca15a54;
+}
+
+.company-app .dl-timeline-bar.done {
+  background: #66b49b50;
+}
+
+.company-app .co-backup-alert {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #f6dcb8;
+}
+
+/* Data tools use the same dark surfaces as the workspace. */
+.company-app .company-data-tools .cdt-state {
+  color: #d4e6f1;
+  background: #365a7063;
+  border-color: #a6c5d84f;
+  font-size: 14px;
+}
+
+.company-app .company-data-tools .cdt-state.healthy {
+  color: #c0f4dc;
+  background: #4d9b7929;
+  border-color: #9ad6b95c;
+}
+
+.company-app .company-data-tools :is(.cdt-state.failed, .cdt-state.stale) {
+  color: #ffe0ae;
+  background: #b18b3d26;
+  border-color: #dec28a66;
+}
+
+.company-app .cdt-facts dt {
+  color: #bed3e2;
+  font-size: 13px;
+}
+
+.company-app .cdt-facts dd {
+  color: #e4f0f7;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.company-app :is(.cdt-preview, .cdt-confirm, .cdt-job) {
+  background: #1d3d53b0;
+  color: #edf6fc;
+  border-color: #9ebed64a;
+}
+
+.company-app :is(.cdt-preview, .cdt-job) p,
+.company-app .cdt-check,
+.company-app .cdt-progress,
+.company-app .cdt-file {
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.company-app .cdt-confirm input:not([type="checkbox"]) {
+  min-height: 44px;
+  color: #eef7fc;
+  background: #16364b;
+  border-color: #91b3ce66;
+  font-size: 15px;
+}
+
+.company-app .cdt-check {
+  align-items: flex-start;
+}
+
+.company-app .cdt-check input {
+  margin-top: 5px;
+}
+
+.company-app .cdt-actions {
+  gap: 10px 14px;
+}
+
+.company-app .cdt-file input {
+  min-height: 44px;
+  width: 100%;
+  padding: 4px;
+  color: #d0e4f1;
+  font-size: 14px;
+  border: 1px solid #9abbd455;
+  border-radius: 9px;
+  background: #17364b4d;
+}
+
+.company-app .cdt-file input::file-selector-button {
+  min-height: 36px;
+  margin-right: 10px;
+  padding: 6px 12px;
+  border: 1px solid #b3d5e158;
+  border-radius: 6px;
+  color: #e4f6ff;
+  background: #3c6077;
+  font: inherit;
+  cursor: pointer;
+}
+
+.company-app .cdt-file input:disabled::file-selector-button {
+  cursor: not-allowed;
+}
+
+.company-app .cdt-paste {
+  margin: 18px 0 22px;
+  padding: 13px 15px;
+  border: 1px solid #a2c3da4d;
+  border-radius: 10px;
+  background: #17374d5c;
+}
+
+.company-app .cdt-paste summary {
+  min-height: 44px;
+  padding: 9px 0;
+  box-sizing: border-box;
+  cursor: pointer;
+  color: #d6ecf8;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.company-app .cdt-paste > label {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  color: #c7deec;
+  font-size: 13px;
+}
+
+.company-app .cdt-paste textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 150px;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid #91b3ce66;
+  border-radius: 8px;
+  background: #153449;
+  color: #e3f0f8;
+  font: 14px/1.75 Consolas, "Cascadia Code", "Microsoft YaHei", monospace;
+  overflow-wrap: anywhere;
+  tab-size: 2;
+}
+
+.company-app .cdt-paste .cdt-actions {
+  margin: 9px 0 5px;
+}
+
+.company-app .cdt-paste > small {
+  display: block;
+  color: #bbd2e2;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.company-app .cdt-job progress {
+  height: 10px;
+  border-radius: 8px;
+  overflow: hidden;
+  accent-color: #9ce3ee;
+}
+
+.company-app .cdt-job progress::-webkit-progress-bar {
+  background: #103047;
+  border-radius: 8px;
+}
+
+.company-app .cdt-job progress::-webkit-progress-value {
+  background: #9ce3ee;
+  border-radius: 8px;
+}
+
+.company-app .cdt-job progress::-moz-progress-bar {
+  background: #9ce3ee;
+  border-radius: 8px;
+}
+
+.company-app .cdt-busy {
+  bottom: 16px;
+  z-index: 5;
+  background: #2d4d62fa;
+  color: #e0edf5;
+  border-color: #badbe578;
+  box-shadow: 0 5px 22px #071c2d45;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* Comparison is a separate dialog, including when rendered through a portal. */
+.rc-dialog {
+  --rc-bg: #203e54;
+  --rc-panel: #2d4d64;
+  --rc-ink: #f1f7fc;
+  --rc-muted: #c2d5e3;
+  --rc-line: #87a9c16b;
+}
+
+.rc-dialog .rc-header {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.rc-dialog .rc-close {
+  width: 44px;
+  height: 44px;
+}
+
+.rc-dialog .rc-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px 12px;
+  margin-bottom: 16px;
+  color: var(--rc-muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.rc-dialog .rc-filter select {
+  min-height: 44px;
+  min-width: 180px;
+  max-width: 100%;
+  padding: 9px 34px 9px 12px;
+  border: 1px solid #9ebdd36b;
+  border-radius: 8px;
+  background: #2c4d65;
+  color: #edf7fe;
+  font: inherit;
+  font-size: 14px;
+}
+
+.rc-dialog :is(.rc-kicker, .rc-periods span, .rc-progress-cell > span, .rc-project-heading p),
+.rc-dialog :is(.rc-progress-cell > small, .rc-field-pair > div > span, .rc-delta small, .rc-note, .rc-footer) {
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.rc-dialog :is(.rc-description, .rc-summary, .rc-empty p, .rc-periods strong, .rc-field h4) {
+  font-size: 14px;
+}
+
+.rc-dialog .rc-field-pair p {
+  font-size: 15px;
+  line-height: 1.85;
+}
+
+.rc-dialog .rc-field-heading > span,
+.rc-dialog .rc-field-pair .rc-missing {
+  font-size: 12px;
+}
+
+.rc-dialog .rc-project {
+  border-color: #89adc464;
+}
+
+.rc-dialog .rc-progress-cell {
+  background: #15334a66;
+}
+
+.rc-dialog .rc-body {
+  scrollbar-color: #90b4cc #203e54;
+}
+
+/* Static placeholders communicate loading without a continuous shimmer. */
+.company-app .co-loading-panel {
+  margin: 20px 0;
+  color: #c5dce9;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.company-app .co-loading-panel > span {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.company-app .co-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 17px;
+}
+
+.company-app .co-skeleton-card {
+  position: relative;
+  min-width: 0;
+  min-height: 190px;
+  padding: 22px;
+  background: #2a4a61;
+  border: 1px solid #9fbfd438;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.company-app .co-skeleton-card::before {
+  content: "";
+  display: block;
+  height: 14px;
+  width: 55%;
+  border-radius: 5px;
+  background: #aac9df20;
+  box-shadow: 0 32px 0 #aac9df15;
+}
+
+.company-app .co-skeleton-card::after {
+  content: "";
+  position: absolute;
+  top: 102px;
+  left: 22px;
+  right: 22px;
+  height: 9px;
+  border-radius: 4px;
+  background: #aac9df17;
+  box-shadow: 0 22px 0 #aac9df11, 0 44px 0 #aac9df0c;
+}
+
+@keyframes co-polish-enter {
+  from { opacity: .45; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .company-app :is(.co-project-card, .dl-project, .co-empty, .co-loading-panel),
+  .co-modal[open],
+  .co-reauth[open],
+  .rc-dialog[open] {
+    animation: co-polish-enter 180ms ease-out;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .company-app .co-project-card:hover {
+    transform: translateY(-1px);
+    border-color: #b1d5ec78;
+    box-shadow: 0 10px 25px #071b2c27;
+  }
+
+  :is(.company-app, .company-login, .co-modal, .co-reauth) .co-primary:not(:disabled):hover {
+    background: #bbf0f8;
+    transform: translateY(-1px);
+  }
+
+  :is(.company-app, .company-login, .co-modal, .co-reauth)
+    :is(.co-text, .co-icon):not(:disabled):hover,
+  .company-app .co-demo-link:hover {
+    background: #bde8f218;
+  }
+
+  .company-app .co-demo-link.co-primary:hover {
+    background: #bbf0f8;
+  }
+
+  .company-app .co-sidebar nav button:not(:disabled):not(.selected):hover {
+    color: #f0f9ff;
+    background: #acd9ef0d;
+  }
+}
+
+:is(.company-app, .company-login, .co-modal, .co-reauth, .rc-dialog) button:not(:disabled):active,
+.company-app .co-demo-link:active {
+  transform: translateY(0) scale(.98);
+}
+
+@media (max-width: 1050px) {
+  .company-app .co-shell > main {
+    padding-top: 22px;
+  }
+
+  .company-app .co-loading-panel {
+    font-size: 13px;
+  }
+
+  .company-app .co-skeleton-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .company-app .co-report-heading-actions {
+    justify-content: flex-start;
+  }
+
+  .company-app .co-reports > .co-section-head {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 700px) {
+  .company-app .co-sidebar {
+    box-sizing: border-box;
+    height: calc(70px + env(safe-area-inset-bottom));
+    padding: 0 3px env(safe-area-inset-bottom);
+    background: #1b374dfc;
+    box-shadow: 0 -5px 20px #071e2f21;
+  }
+
+  .company-app .co-sidebar nav {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 0;
+    height: 70px;
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .company-app .co-sidebar nav button {
+    width: 100%;
+    min-width: 0;
+    min-height: 60px;
+    margin: 4px 0;
+    padding: 6px 1px;
+    gap: 4px;
+    justify-content: center;
+    font-size: 10.5px;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    border: 0;
+  }
+
+  .company-app .co-sidebar nav button > svg {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+  }
+
+  .company-app .co-sidebar nav button.selected {
+    background: #98d5e51c;
+    box-shadow: inset 0 2px #adeaf7;
+  }
+
+  .company-app .co-shell {
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+
+  .company-app .co-topbar {
+    min-height: 58px;
+    height: auto;
+    gap: 8px;
+    padding: 5px 14px;
+  }
+
+  .company-app .co-topbar > span {
+    font-size: 12px;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .company-app .co-topbar .co-text {
+    min-height: 44px;
+    font-size: 12px;
+    padding: 7px;
+    white-space: nowrap;
+  }
+
+  .company-app .co-shell > main {
+    padding: 18px 15px 25px;
+  }
+
+  .company-app .co-company-switch > label {
+    font-size: 13px;
+  }
+
+  .company-app .co-company-switch > .co-small {
+    font-size: 11px;
+  }
+
+  .company-app .co-company-switch select,
+  .company-app .dl-controls select,
+  .company-app .co-report-toolbar :is(input, select),
+  .company-app .cdt-confirm input:not([type="checkbox"]),
+  .company-app .cdt-paste textarea,
+  .company-app .co-policy select,
+  :is(.co-modal, .co-reauth, .company-login) input:not([type="checkbox"]),
+  :is(.co-modal, .co-reauth) :is(textarea, select) {
+    min-height: 46px;
+    font-size: 16px;
+  }
+
+  .company-app .co-page-heading {
+    margin-top: 24px;
+    margin-bottom: 21px;
+  }
+
+  .company-app .co-page-heading h1 {
+    font-size: 24px;
+  }
+
+  .company-app .co-page-heading > div > p:last-child {
+    font-size: 14px;
+  }
+
+  .company-app .co-page-heading > .co-primary {
+    min-height: 44px;
+    font-size: 14px;
+    margin-top: 15px;
+  }
+
+  .company-app .co-page-heading.co-compact-heading {
+    margin-top: 18px;
+    margin-bottom: 19px;
+    padding-bottom: 17px;
+  }
+
+  .company-app .co-compact-heading h1 {
+    font-size: 21px;
+  }
+
+  .company-app .co-compact-heading > div > p:last-child {
+    font-size: 13px;
+  }
+
+  .company-app .co-panel,
+  .company-app .dl-project.co-panel {
+    padding: 20px 16px;
+  }
+
+  .company-app .co-project-card {
+    padding: 20px;
+  }
+
+  .company-app .co-project-grid {
+    gap: 15px;
+  }
+
+  .company-app .co-section-head {
+    flex-wrap: wrap;
+  }
+
+  .company-app .co-setup-guide {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+    padding: 14px 16px;
+  }
+
+  .company-app .co-setup-guide button {
+    padding-left: 0;
+  }
+
+  .company-app .co-section-head .co-primary {
+    min-height: 44px;
+    font-size: 13px;
+  }
+
+  .company-app :is(.co-delivery, .co-reports) > .co-section-head h2 {
+    font-size: 20px;
+  }
+
+  .company-app .co-report-heading-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 7px;
+  }
+
+  .company-app .co-report-heading-actions :is(button, .co-primary),
+  .company-app .dl-add-actions button {
+    min-height: 44px;
+    padding: 9px 11px;
+    font-size: 13px;
+  }
+
+  .company-app :is(.dl-controls, .co-report-toolbar) {
+    gap: 12px;
+    padding: 13px 12px;
+  }
+
+  .company-app :is(.dl-controls, .co-report-toolbar) > label {
+    font-size: 12px;
+  }
+
+  .company-app .dl-views button {
+    min-height: 44px;
+    padding: 9px 7px;
+    font-size: 12px;
+    gap: 5px;
+  }
+
+  .company-app .co-report-kinds button {
+    font-size: 13px;
+  }
+
+  .company-app .co-stats > span {
+    min-height: 70px;
+    padding: 16px 18px;
+  }
+
+  .company-app .dl-stats > span {
+    font-size: 12px;
+    padding: 13px 12px;
+    gap: 10px;
+  }
+
+  .company-app .dl-item {
+    gap: 11px;
+  }
+
+  .company-app .dl-item h4 {
+    font-size: 15px;
+  }
+
+  .company-app .dl-item-actions {
+    max-width: none;
+    padding-left: 55px;
+  }
+
+  .company-app .dl-item-actions button {
+    padding-right: 13px;
+    font-size: 13px;
+  }
+
+  .company-app .dl-awaiting > span,
+  .company-app .co-backup-alert > span {
+    min-width: 0;
+    flex-basis: calc(100% - 32px);
+  }
+
+  .company-app .dl-awaiting .co-text {
+    margin-left: 0;
+    padding: 8px 10px;
+  }
+
+  .company-app .co-backup-alert > button {
+    min-height: 44px;
+    margin-left: 22px;
+    font-size: 13px;
+    padding: 7px 10px;
+  }
+
+  .company-app .dl-inbox p > strong {
+    font-size: 13px;
+  }
+
+  .company-app .dl-timeline-row {
+    min-height: 80px;
+  }
+
+  .company-app .cdt-busy {
+    bottom: calc(84px + env(safe-area-inset-bottom));
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .company-app .cdt-facts > div {
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--co-line);
+  }
+
+  .company-app .cdt-facts > div:last-child {
+    border-bottom: 0;
+  }
+
+  .company-app .cdt-facts dd {
+    font-size: 14px;
+    text-align: right;
+  }
+
+  .company-app .cdt-file input {
+    font-size: 16px;
+  }
+
+  .company-app .co-skeleton-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .company-app .co-skeleton-card {
+    min-height: 170px;
+  }
+
+  .co-modal,
+  .co-reauth {
+    padding: 22px 18px;
+    max-height: calc(100dvh - 24px - env(safe-area-inset-bottom));
+  }
+
+  .rc-dialog .rc-header h2 {
+    font-size: 19px;
+  }
+
+  .rc-dialog .rc-filter {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .rc-dialog .rc-filter select {
+    min-width: 0;
+    width: 100%;
+    min-height: 46px;
+    font-size: 16px;
+  }
+
+  .rc-dialog .rc-periods {
+    gap: 10px;
+  }
+
+  .rc-dialog .rc-periods strong {
+    font-size: 13px;
+  }
+
+  .rc-dialog .rc-body {
+    padding: 17px 14px;
+  }
+
+  .rc-dialog .rc-field-pair p {
+    font-size: 14px;
+  }
+
+  .rc-dialog .rc-footer {
+    padding-bottom: max(13px, env(safe-area-inset-bottom));
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .company-app,
+  .company-app *,
+  .company-app *::before,
+  .company-app *::after,
+  .company-login,
+  .company-login *,
+  .co-modal,
+  .co-modal *,
+  .co-reauth,
+  .co-reauth *,
+  .rc-dialog,
+  .rc-dialog *,
+  .co-modal::backdrop,
+  .co-reauth::backdrop,
+  .rc-dialog::backdrop {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+
+  .company-app .co-project-card:hover,
+  :is(.company-app, .company-login, .co-modal, .co-reauth, .rc-dialog) button:not(:disabled):active,
+  :is(.company-app, .company-login, .co-modal, .co-reauth) .co-primary:not(:disabled):hover,
+  .company-app .co-demo-link:active {
+    transform: none;
+  }
+}
+
+
+@media (max-width: 700px) {
+  .company-app .co-sidebar nav {
+    grid-auto-columns: minmax(78px, 1fr);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    scroll-snap-type: x proximity;
+  }
+  .company-app .co-sidebar nav button { scroll-snap-align: center; }
+}
+
+/* Keep tools compact and give the data its own brighter surface. */
+.company-app .co-first-help{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:15px 18px;margin:16px 0 22px;border:1px solid #a0dce85c;border-radius:13px;background:linear-gradient(110deg,#75c9dc22,#79a7ee12)}
+.co-first-help>svg{color:#c0f1f6;flex-shrink:0}.co-first-help>div{flex:1;min-width:190px}.co-first-help strong{font-size:13px;color:#ecf9ff}.co-first-help p{font-size:12px;color:#c0d8e7;line-height:1.8;margin:5px 0 0}
+.company-operating .op-heading{margin-bottom:19px}.company-operating .op-toolbar{padding:15px 17px;box-shadow:none}.company-operating .op-quick-dates{margin:11px 0 15px}.company-operating .op-period-strip{margin-top:16px}.company-operating .op-boundary{margin-bottom:17px}
+.company-operating .op-panel,.company-operating .op-summary-card{background:linear-gradient(130deg,#30566e,#27485f);border-color:#9bc6dc4f;box-shadow:inset 0 1px #c8edf413,0 6px 20px #071b2c12}
+.company-operating .op-table{font-size:13px}.company-operating .op-table .op-unknown,.op-dialog .op-table .op-unknown{color:#b5cad9}
+.company-preview :is(.cp-item p,.cp-person,.cp-project-foot,.cp-version){font-size:12px;color:#566f88;line-height:1.8}
+.company-preview :is(.cp-demo-banner,.cp-preview-label,.cp-eyebrow){font-size:12px}
+@media(max-width:700px){.company-operating .op-table{font-size:12px}.company-operating .op-toolbar{padding:12px}.company-operating .op-eyebrow{letter-spacing:1px;font-size:10px;margin-bottom:7px}.company-app .co-first-help{padding:13px;gap:10px}.co-first-help .co-text{min-height:44px}.company-app .co-sidebar nav{scrollbar-color:#92b6cc transparent}.company-preview :is(.cp-item p,.cp-person,.cp-project-foot,.cp-version){font-size:12px}}

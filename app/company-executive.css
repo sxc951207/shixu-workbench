@@ -1,0 +1,468 @@
+/* Executive finish for the signed-in company workspace.
+   Keep this layer after company-polish.css. Projection is a separate surface. */
+.company-app {
+  --co-bg: #1c364b;
+  --co-panel: #2c4e66;
+  --co-panel-light: #355c74;
+  --co-text: #f3f8fc;
+  --co-muted: #c3d4e1;
+  --co-line: #a6c6dc38;
+  --co-accent: #b3e7f3;
+  background:
+    radial-gradient(ellipse at 90% 0, #6a9dbb19, transparent 44%),
+    linear-gradient(180deg, #1b354a, #203d52 72%, #1d384d);
+}
+
+.company-app .co-sidebar {
+  background: linear-gradient(180deg, #193247f5, #1b374cf7);
+  border-right-color: #a8c7dc32;
+  box-shadow: 8px 0 30px #0a203218;
+}
+
+.company-app .co-brand {
+  gap: 11px;
+  font-size: 26px;
+  letter-spacing: .25px;
+}
+
+.company-app .co-brand > svg {
+  color: #b7e9f3;
+  stroke-width: 1.8;
+}
+
+.company-app .co-brand small {
+  color: #a8c4d7;
+  font-size: 10px;
+  letter-spacing: 1.8px;
+}
+
+.company-app .co-test-badge {
+  color: #c2e6f2;
+  background: #94cce211;
+  border-color: #a8cfdf3b;
+  border-radius: 5px;
+  letter-spacing: .4px;
+}
+
+.company-app .co-sidebar nav button {
+  min-height: 48px;
+  border-radius: 8px;
+  color: #cbdeeb;
+  letter-spacing: .15px;
+}
+
+.company-app .co-sidebar nav button.selected {
+  color: #f2fbff;
+  background: linear-gradient(100deg, #88c6df25, #90c6dd12);
+  border-color: #b9dfef4a;
+  box-shadow: inset 3px 0 #b5e7f3, 0 3px 12px #071c2b12;
+}
+
+.company-app .co-sidebar-foot {
+  border-top-color: #a7c7dc32;
+}
+
+.company-app .co-topbar {
+  background: #1c374bc9;
+  border-bottom-color: #a8c9df30;
+  box-shadow: 0 1px 0 #d6eaf807;
+}
+
+.company-app .co-topbar > span {
+  color: #d1e1ec;
+  letter-spacing: .2px;
+}
+
+.company-app .co-company-switch select {
+  background: #2b4d65;
+  border-color: #9fc2d76b;
+  box-shadow: inset 0 1px 0 #d5ecf90a;
+  font-weight: 550;
+}
+
+.company-app .co-page-heading,
+.company-app .co-page-heading.co-compact-heading {
+  position: relative;
+  margin: 26px 0 24px;
+  padding: 8px 0 25px 20px;
+  border-bottom: 1px solid #a9c9de45;
+}
+
+.company-app .co-page-heading::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  bottom: 29px;
+  left: 0;
+  width: 3px;
+  min-height: 42px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #c3e8f4, #84afc5);
+  pointer-events: none;
+}
+
+.company-app .co-page-heading h1,
+.company-app .co-compact-heading h1 {
+  color: #f7fbfe;
+  font-size: clamp(28px, 2.4vw, 36px);
+  font-weight: 700;
+  letter-spacing: -.7px;
+  line-height: 1.4;
+}
+
+.company-app .co-page-heading .co-eyebrow,
+.company-app .co-compact-heading .co-eyebrow {
+  color: #b3d7e8;
+  font-size: 10px;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.company-app .co-page-heading > div > p:last-child,
+.company-app .co-compact-heading > div > p:last-child {
+  margin-top: 9px;
+  color: #c8dae7;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.company-app .co-stats {
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.company-app .co-stats > span,
+.company-app .dl-stats > span {
+  background: linear-gradient(125deg, #355a728c, #2c4c636b);
+  border-color: #accddd45;
+  box-shadow: inset 0 1px 0 #e2f4ff08, 0 5px 18px #071e2d0d;
+  color: #d0e2ed;
+}
+
+.company-app .co-stats > span {
+  min-height: 96px;
+  padding: 20px 25px;
+  border-radius: 12px;
+}
+
+.company-app .co-stats strong {
+  color: #f0fbff;
+  font-size: 38px;
+  font-weight: 650;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.company-app .co-stats .co-stat-flow {
+  color: #e2f3fc;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: .1px;
+}
+
+.company-app .dl-stats strong {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.company-app .co-project-grid {
+  gap: 22px;
+}
+
+.company-app .co-panel,
+.company-app .co-project-card {
+  background: linear-gradient(130deg, #31556d, #294a62);
+  border-color: #acc9dc47;
+  box-shadow: 0 8px 24px #0a233414, inset 0 1px 0 #e3f1fc08;
+  border-radius: 14px;
+}
+
+.company-app .co-project-card {
+  padding: 26px;
+}
+
+.company-app .co-project-card::before {
+  inset: 0 18px auto;
+  background: linear-gradient(90deg, #d1ebfa00, #c1e1f070, #d1ebfa00);
+}
+
+.company-app .co-project-card h2 {
+  font-size: 23px;
+  font-weight: 650;
+  line-height: 1.5;
+  letter-spacing: -.3px;
+  margin-top: 19px;
+  margin-bottom: 8px;
+}
+
+.company-app .co-project-people {
+  color: #c5d9e7;
+  margin-bottom: 24px;
+}
+
+.company-app .co-progress-heading strong {
+  color: #e2f8ff;
+  font-size: 23px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.company-app .co-progress {
+  background: #193b50;
+  height: 6px;
+  margin-top: 12px;
+  margin-bottom: 24px;
+}
+
+.company-app .co-progress > i {
+  background: linear-gradient(90deg, #8bbfd5, #c0e7f2);
+}
+
+.company-app .co-project-card dt {
+  color: #bfd6e5;
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: .4px;
+}
+
+.company-app .co-project-card dd {
+  color: #edf5fb;
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.company-app .co-card-actions {
+  border-top-color: #b1cddd38;
+  margin-top: 21px;
+  padding-top: 17px;
+}
+
+.company-app .co-primary {
+  background: #b2e4ef;
+  color: #17384d;
+  border-radius: 8px;
+  box-shadow: inset 0 1px 0 #e8f9ff77, 0 3px 9px #0a213524;
+  min-height: 44px;
+}
+
+.company-app .co-text {
+  color: #d6edf8;
+}
+
+.company-app .co-icon {
+  background: #a8ccdf0c;
+  border-color: #abcbdc52;
+}
+
+.company-app :is(.dl-controls, .co-report-toolbar) {
+  background: #18394d61;
+  border-color: #a3c5da3d;
+}
+
+.company-app :is(.dl-views, .co-report-kinds) button.selected {
+  color: #f1fbff;
+  background: #88b9d133;
+  box-shadow: inset 0 0 0 1px #b8dcec54;
+}
+
+.company-app .dl-project-head h3 {
+  font-weight: 650;
+  letter-spacing: -.25px;
+}
+
+/* Operating reports keep their compact control stack and current data layout. */
+.company-app .company-operating {
+  --op-panel: #2d5067;
+  --op-muted: #c2d5e1;
+  --op-line: #a8c8d83b;
+}
+
+.company-app .op-panel {
+  background: linear-gradient(130deg, #31556b, #294b62);
+  border-color: #a6c7d648;
+  box-shadow: inset 0 1px 0 #e5f7ff07, 0 6px 18px #0a233410;
+}
+
+.company-app .op-summary-card {
+  background: linear-gradient(125deg, #365e75, #2d5067);
+  border-color: #abcddd4a;
+}
+
+.company-app .op-summary-card > strong {
+  color: #f3fbff;
+  font-weight: 650;
+}
+
+.company-app .op-table {
+  color: #e7f1f7;
+  font-size: 13px;
+}
+
+.company-app .op-table thead th {
+  background: #1d4056;
+  color: #d8e8f2;
+  font-size: 12px;
+}
+
+.company-app .op-table th:first-child,
+.company-app .op-table td:first-child {
+  background: #2e526a;
+}
+
+.company-app .op-table thead th:first-child {
+  background: #21455c;
+}
+
+.company-app .op-table tbody tr:nth-child(even) > td:not(:first-child) {
+  background-color: #c0ddeb05;
+}
+
+.company-app .op-table .op-unknown {
+  color: #c0d3df;
+}
+
+.company-app .op-table tfoot :is(th, td) {
+  color: #e3f6fc;
+  background: #23475d;
+  border-top-color: #bad9e86b;
+}
+
+.company-app .op-table tfoot th:first-child {
+  background: #294d64;
+}
+
+.company-app .co-empty {
+  background: linear-gradient(125deg, #2e516641, #28485e29);
+  border-color: #b5d2e161;
+}
+
+@keyframes co-executive-arrive {
+  from { opacity: .55; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .company-app :is(.co-page-heading, .co-stats, .co-project-card) {
+    animation: co-executive-arrive 240ms cubic-bezier(.2, .7, .3, 1) backwards;
+  }
+
+  .company-app .co-project-card:nth-child(2) { animation-delay: 25ms; }
+  .company-app .co-project-card:nth-child(3) { animation-delay: 45ms; }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .company-app .co-project-card:hover {
+    transform: translateY(-2px);
+    border-color: #c2e0ef80;
+    box-shadow: 0 12px 28px #071c2d26, inset 0 1px 0 #e7f5ff14;
+  }
+
+  .company-app .co-primary:not(:disabled):hover {
+    background: #c7eef6;
+    box-shadow: inset 0 1px 0 #f1fcff88, 0 5px 14px #081f3330;
+  }
+
+  .company-app .op-table tbody tr:hover > td {
+    background-color: #b7d8e512;
+  }
+
+  .company-app .op-table tbody tr:hover > td:first-child {
+    background-color: #355d74;
+  }
+}
+
+@media (min-width: 1700px) {
+  .company-app .co-page-heading h1 { font-size: 36px; }
+  .company-app .co-project-card h2 { font-size: 24px; }
+}
+
+@media (max-width: 1050px) {
+  .company-app .co-page-heading,
+  .company-app .co-page-heading.co-compact-heading {
+    margin-top: 22px;
+    padding-left: 17px;
+  }
+
+  .company-app .co-page-heading h1 { font-size: 29px; }
+  .company-app .co-stats > span { padding: 18px 20px; }
+}
+
+@media (max-width: 700px) {
+  .company-app .co-sidebar {
+    background: #1d3b50fc;
+    border-top-color: #adcddd4d;
+    box-shadow: 0 -5px 20px #0b233526;
+  }
+
+  .company-app .co-sidebar nav button {
+    min-height: 60px;
+    border-radius: 7px;
+    font-size: 11px;
+    letter-spacing: 0;
+  }
+
+  .company-app .co-sidebar nav button.selected {
+    background: #a8d5e520;
+    border-color: transparent;
+    box-shadow: inset 0 2px #c1e7f3;
+  }
+
+  .company-app .co-page-heading,
+  .company-app .co-page-heading.co-compact-heading {
+    margin: 22px 0 20px;
+    padding: 4px 0 20px 14px;
+  }
+
+  .company-app .co-page-heading::before {
+    top: 7px;
+    bottom: 24px;
+    width: 2px;
+  }
+
+  .company-app .co-page-heading h1,
+  .company-app .co-compact-heading h1 {
+    font-size: 26px;
+    line-height: 1.45;
+    letter-spacing: -.45px;
+  }
+
+  .company-app .co-page-heading > div > p:last-child {
+    font-size: 13px;
+    margin-top: 8px;
+  }
+
+  .company-app .co-page-heading > .co-primary {
+    margin-top: 16px;
+  }
+
+  .company-app .co-stats {
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .company-app .co-stats > span {
+    min-height: 78px;
+    padding: 16px 18px;
+  }
+
+  .company-app .co-stats strong { font-size: 33px; }
+  .company-app .co-stats .co-stat-flow { font-size: 16px; }
+  .company-app .co-project-grid { gap: 16px; }
+  .company-app .co-project-card { padding: 21px 19px; }
+  .company-app .co-project-card h2 { font-size: 21px; margin-top: 16px; }
+  .company-app .co-project-people { margin-bottom: 21px; }
+  .company-app .co-project-card dd { font-size: 14px; }
+  .company-app .op-table { font-size: 12px; }
+  .company-app .op-table thead th { font-size: 12px; }
+  .company-app .op-table th small { font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .company-app :is(.co-page-heading, .co-stats, .co-project-card) {
+    animation: none !important;
+  }
+
+  .company-app .co-project-card:hover {
+    transform: none;
+  }
+}

@@ -1,0 +1,345 @@
+/* Company workspaces share one palette. Projection has its own contrast settings. */
+html[data-company-theme="light"] {
+  --company-bg: #f3f6fb;
+  --company-panel: #f6f8fc;
+  --company-text: #16243e;
+  --company-muted: #50617b;
+  --company-border: #d9e1ec;
+  --company-accent: #304eb0;
+  --company-primary: #354db1;
+  --company-primary-hover: #293f95;
+  --company-soft: #edf1ff;
+  --company-hover: #e3eafa;
+  --company-shadow: 0 1px 2px #142a4410, 0 5px 18px -12px #223d7033;
+}
+html[data-company-theme="dark"] {
+  --company-bg: #111a2a;
+  --company-card: #1b273a;
+  --company-panel: #202f45;
+  --company-text: #eff3fb;
+  --company-muted: #b1c1d8;
+  --company-border: #3a4c65;
+  --company-accent: #adc3ff;
+  --company-primary: #aac0ff;
+  --company-primary-hover: #cad6ff;
+  --company-soft: #2b3c60;
+  --company-hover: #334974;
+}
+
+html[data-company-theme] .company-app .co-topbar { height: 64px; }
+html[data-company-theme] .company-app .co-brand {
+  color: var(--co-text);
+  gap: 9px;
+  font-size: 24px;
+  letter-spacing: -.04em;
+}
+.company-app .co-brand img, .co-entry-brand img { display: block; flex: none; border-radius: 9px; }
+html[data-company-theme] .company-app .co-topbar-context { font-size: 12px; }
+html[data-company-theme] .company-app .co-topbar .co-sidebar-foot > svg { color: var(--company-success); }
+html[data-company-theme] .company-app .co-company-switch > label { flex-wrap: nowrap; white-space: nowrap; }
+html[data-company-theme] .company-app .co-current-company {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 13px;
+  color: var(--co-muted);
+}
+.company-app .co-current-company > span { flex: none; }
+.company-app .co-single-company {
+  min-width: 0;
+  max-width: 34ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--co-text);
+}
+html[data-company-theme] .company-app .co-page-heading:not(.co-lead-heading):not(:has(.co-brief)) { border-color: var(--co-border); }
+html[data-company-theme] .company-app .co-shell > main { margin-inline: auto; }
+
+@media (min-width: 701px) {
+  html[data-company-theme] .company-app .co-sidebar nav {
+    align-items: center;
+    height: 52px;
+    gap: clamp(2px, .7vw, 12px);
+  }
+  html[data-company-theme] .company-app .co-sidebar nav button {
+    height: 40px;
+    min-height: 40px;
+    padding: 0 clamp(9px, 1vw, 16px);
+    border-radius: 0;
+    border-bottom: 2px solid transparent;
+  }
+  html[data-company-theme] .company-app .co-sidebar nav button.selected {
+    box-shadow: none;
+    background: transparent;
+    border-bottom-color: var(--co-accent);
+    font-weight: 650;
+  }
+  html[data-company-theme] .company-app .co-sidebar nav button:not(:disabled):not(.selected):hover {
+    background: var(--co-panel);
+  }
+}
+
+@media (max-width: 700px) {
+  html[data-company-theme] .company-app .co-topbar { height: auto; min-height: 56px; }
+  html[data-company-theme] .company-app .co-brand { min-height: 44px; }
+  html[data-company-theme] .company-app .co-brand img { width: 28px; height: 28px; }
+  html[data-company-theme] .company-app .co-company-switch { row-gap: 6px; }
+  html[data-company-theme] .company-app .co-sidebar nav { grid-auto-columns:minmax(68px,1fr); }
+  html[data-company-theme] .company-app .co-sidebar nav button.selected {
+    color: var(--co-accent);
+    box-shadow: none;
+    background: transparent;
+    font-weight: 700;
+  }
+  html[data-company-theme] .company-app .co-sidebar nav button.selected > svg {
+    box-sizing: content-box;
+    border-radius: 8px;
+    padding: 3px 12px;
+    margin: -3px -12px;
+    background: transparent;
+    border-bottom: 2px solid var(--co-accent);
+    border-radius: 0;
+  }
+}
+
+/* Sign-in and invitation share the same form, with the optional demo alongside. */
+html[data-company-theme] main.co-studio-login {
+  display: block;
+  min-height: 100svh;
+  padding: 0 clamp(18px, 4vw, 62px) clamp(30px, 5vw, 75px);
+  background: var(--company-bg);
+}
+.co-entry-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1180px;
+  min-height: clamp(76px, 10vh, 98px);
+  margin-inline: auto;
+}
+.co-entry-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--co-text);
+  text-decoration: none;
+  font-size: 25px;
+  font-weight: 750;
+  letter-spacing: -.04em;
+}
+.co-entry-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(280px, .88fr);
+  grid-template-areas: "sign cover";
+  align-items: stretch;
+  max-width: 910px;
+  min-height: 400px;
+  margin: clamp(12px, 3vh, 32px) auto 0;
+  border: 1px solid var(--co-border);
+  border-radius: 10px;
+  background: var(--co-card);
+  box-shadow: 0 12px 54px -34px #132a5440;
+  overflow: clip;
+}
+html[data-company-theme] .co-studio-login .co-entry-form {
+  grid-area: sign;
+  align-self: center;
+  width: 100%;
+  max-width: 520px;
+  min-width: 0;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: clamp(28px, 4.4vw, 68px);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.co-studio-login .co-entry-form h1 {
+  margin: 0 0 22px;
+  font-size: clamp(25px, 2.55vw, 38px);
+  line-height: 1.25;
+  color: var(--co-text);
+  letter-spacing: -.055em;
+}
+.co-studio-login .co-entry-form .co-auth-tabs {
+  gap: 4px;
+  margin: 0 0 22px;
+  padding: 4px;
+  border: 1px solid var(--co-border);
+  border-radius: 12px;
+  background: var(--co-panel);
+}
+.co-studio-login .co-entry-form .co-auth-tabs > button {
+  flex: 1;
+  min-height: 40px;
+  color: var(--co-muted);
+  font-size: 14px;
+}
+.co-studio-login .co-entry-form .co-auth-tabs > button.selected {
+  background: var(--co-card);
+  color: var(--co-accent);
+  font-weight: 650;
+  box-shadow: 0 1px 4px #0e204320;
+}
+.co-studio-login .co-entry-form .co-auth-tabs > strong { padding: 8px; }
+.co-studio-login .co-entry-form :is(label, .co-help) { color: var(--co-muted); }
+.co-studio-login .co-entry-form form .co-primary { margin-top: 4px; justify-content: center; width: 100%; }
+.co-studio-login .co-entry-form .co-help { font-size: 12px; line-height: 1.7; margin-bottom: 0; }
+.co-entry-art {
+  grid-area:cover;
+  align-self:stretch;
+  display:grid;
+  align-content:center;
+  padding:clamp(23px,3.6vw,48px);
+  background:var(--co-panel);
+  border-left:1px solid var(--co-border);
+  color:var(--co-text);
+}
+.co-entry-art-content h2 { margin:0; font-size:clamp(21px,2.1vw,29px); letter-spacing:-.035em; color:var(--co-text); }
+.co-entry-art-content p { margin:8px 0 16px; line-height:1.6; color:var(--co-muted); }
+.co-entry-links { display:flex; flex-direction:column; }
+.co-entry-links a {
+  display:flex;
+  align-items:center;
+  min-height:48px;
+  gap:10px;
+  border-top:1px solid var(--co-border);
+  color:var(--co-accent);
+  text-decoration:none;
+  font-weight:600;
+}
+.co-entry-links a svg:last-child { margin-left:auto; }
+.co-entry-links a:hover { text-decoration:underline; text-underline-offset:4px; }
+html[data-company-theme] .co-studio-login .co-entry-links a:focus-visible { outline:2px solid var(--co-accent); outline-offset:3px; }
+@media (max-width: 790px) {
+  html[data-company-theme] main.co-studio-login { padding-inline: 16px; }
+  .co-entry-bar { min-height: 66px; }
+  .co-entry-layout { grid-template-areas: "sign" "cover"; grid-template-columns: minmax(0,1fr); max-width: 540px; margin-top: 4px; min-height: 0; }
+  html[data-company-theme] .co-studio-login .co-entry-form { padding: clamp(22px, 6vw, 36px); }
+  .co-entry-art { padding: 22px; border-left:0; border-top:1px solid var(--co-border); }
+  .co-entry-art-content h2 { font-size: 21px; }
+  .co-entry-art-content p { margin: 6px 0 14px; font-size: 13px; }
+}
+.op-day-cells{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:8px 18px;margin:12px 0}.op-day-cells label{display:grid;grid-template-columns:minmax(65px,1fr) minmax(66px,1fr) minmax(65px,106px);gap:7px;align-items:center}.op-day-cells input,.op-day-cells svg{width:100%;min-width:0}.op-day-cells small{display:block;font-size:11px}
+
+/* Shared company navigation, inbox and meeting headers. */
+html[data-company-theme] .company-app {
+  --co-mast: radial-gradient(ellipse at 64% 115%, #196d95 0%, transparent 51%), linear-gradient(108deg, #122241, #192f62 52%, #143b59);
+  --co-mast-ink: #f8fbff;
+  --co-mast-muted: #d5e3f3;
+}
+html[data-company-theme="dark"] .company-app {
+  --co-mast: radial-gradient(ellipse at 64% 115%, #185777 0%, transparent 48%), linear-gradient(108deg, #152139, #192b55 52%, #142c45);
+}
+html[data-company-theme] .company-app :is(.cr-inbox-head,.co-brief) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  min-height: clamp(128px, 15vw, 186px);
+  box-sizing: border-box;
+  padding: clamp(16px, 2.3vw, 34px);
+  margin: 0 0 16px;
+  border: 1px solid #37618a;
+  border-radius: 14px;
+  background: var(--co-mast);
+  color: var(--co-mast-ink);
+}
+html[data-company-theme] .company-app :is(.cr-inbox-head,.co-brief) h1 {
+  margin: 0;
+  color: var(--co-mast-ink);
+  font-size: clamp(24px, 2.35vw, 36px);
+  letter-spacing: -.035em;
+  line-height: 1.2;
+}
+html[data-company-theme] .company-app :is(.cr-inbox-head p,.co-brief-scope) {
+  margin: 7px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--co-mast-muted);
+}
+.co-light-ribbon {position:absolute;z-index:-1;inset:0;width:100%;height:100%;pointer-events:none;mask-image:linear-gradient(90deg,transparent 18%,#000 42%,#000 79%,transparent 92%)}
+@media(max-width:550px){
+  .company-app .co-light-ribbon {mask-image:linear-gradient(90deg,transparent 27%,#000 44%,#000 70%,transparent 84%)}
+  .company-app .co-brief-copy {max-width:48%}
+}
+@media print {.company-app .co-light-ribbon {display:none}}
+.cr-inbox-total {display: grid; justify-items: end; flex: none; border-left: 1px solid #ffffff40; padding-left: clamp(16px,3vw,40px)}
+.cr-inbox-total span {font-size: 12px; color: var(--co-mast-muted)}
+.cr-inbox-total strong {font-size: clamp(32px,3.5vw,51px); line-height: 1.1; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.045em}
+html[data-company-theme] .company-app .co-brief-count {color: var(--co-mast-ink); border-color: #ffffff50; background: #ffffff0d; border-radius: 8px; padding: 8px 12px}
+html[data-company-theme] .company-app .co-brief-count :is(span,small,strong,svg) {color: inherit}
+html[data-company-theme] .company-app .co-brief-count:focus-visible {outline-color: white}
+html[data-company-theme] .company-app .cr-queue {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.cr-toolbar {display: flex; justify-content: space-between; align-items: center; gap: 7px; margin-bottom: 12px}
+.cr-toolbar > .co-text {margin-left: auto; min-height: 42px}
+html[data-company-theme] .company-app .cr-modes {background: var(--co-panel); border-color: var(--co-border); margin: 0}
+html[data-company-theme] .company-app .cr-modes button {min-height: 38px; color: var(--co-muted); font-size: 14px}
+html[data-company-theme] .company-app .cr-modes [aria-pressed="true"] {background: var(--co-card); color: var(--co-text); box-shadow: 0 1px 4px #16233923}
+html[data-company-theme] .company-app .cr-filter-panel {background: var(--co-card)}
+.cr-period-note, .cr-period-note summary {color: var(--co-muted); font-size: 12px}
+.cr-period-note summary {cursor: pointer; width: fit-content}
+.cr-receipt {display: flex; align-items: center; gap: 7px; color: var(--company-success); background: var(--company-success-bg); padding: 10px 14px; border-radius: 8px}
+.cr-items {box-shadow: var(--company-shadow); overflow: clip}
+.cr-groups h3 {font-weight: 700; letter-spacing: -.015em}
+.cr-groups h3 small {font-variant-numeric: tabular-nums}
+.cr-excerpt {color: var(--co-text); font-size: 14px}
+html[data-company-theme] .company-app .cr-open {background: transparent; color: var(--co-accent)}
+@media(min-width: 900px) {
+  .cr-items > button[data-kind="daily"] .cr-item-body {
+    display: grid;
+    grid-template-columns: minmax(8rem,.8fr) minmax(0,2.4fr) minmax(8rem,1fr);
+    grid-template-areas: "person excerpt date" "project excerpt date";
+    align-items: center;
+    column-gap: 24px;
+  }
+  .cr-items [data-kind="daily"] .cr-item-title {grid-area: person}
+  .cr-items [data-kind="daily"] .cr-item-kind {grid-area: project; color: var(--co-muted); font-size: 12px}
+  .cr-items [data-kind="daily"] .cr-excerpt {grid-area: excerpt}
+  .cr-items [data-kind="daily"] small {grid-area: date; justify-self: end}
+}
+@media (max-width: 700px) {
+  html[data-company-theme] .company-app .co-sidebar nav button.selected {background: var(--co-soft); border-radius: 10px}
+  html[data-company-theme] .company-app .co-sidebar nav button.selected > svg {border: 0}
+  .cr-toolbar .cr-modes button {padding-inline: 8px}
+  .cr-item-body .cr-excerpt {display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; line-height: 1.45}
+  .cr-item-body .cr-item-kind {color: var(--co-muted); font-size: 12px}
+}
+@media (min-width: 701px) {
+  html[data-company-theme] .company-app .co-sidebar nav button.selected {border-radius: 8px; border-color: transparent; background: var(--co-soft); color: var(--co-accent)}
+}
+@keyframes co-surface-enter {from {opacity: .35; transform: translateY(5px)} to {opacity: 1; transform: translateY(0)}}
+@keyframes co-number-enter {from {opacity: .45; transform: translateY(-3px)} to {opacity: 1; transform: translateY(0)}}
+@media (prefers-reduced-motion: no-preference) {
+  .company-app :is(.cr-inbox-head,.co-brief,.cr-receipt), .company-app dialog.co-modal[open] {animation: co-surface-enter 180ms ease-out}
+  .company-app :is(.cr-inbox-total strong,.co-review-count) {animation: co-number-enter 160ms ease-out}
+  .company-app :is(.co-sidebar nav button,.cr-modes button,.cr-open svg) {transition: background-color 150ms ease-out, transform 150ms ease-out}
+  .company-app :is(.co-primary,.cr-open):active {transform: scale(.98)}
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .cr-items > button:enabled:hover .cr-open svg {transform: translateX(3px)}
+}
+@media (prefers-reduced-motion: reduce) {
+  .company-app :is(.cr-inbox-head,.co-brief,.co-review-count,.cr-inbox-total strong,.cr-receipt,dialog.co-modal[open]) {animation: none}
+}
+
+.company-app[data-section="review"] .co-company-switch {margin-bottom: 12px}
+html[data-company-theme] .company-app .cr-queue {background: none}
+.cr-daily-modal .cr-daily-content {border-top: 1px solid var(--co-line); border-bottom: 1px solid var(--co-line); padding: 14px 0 2px}
+.cr-daily-modal .cr-daily-content section {border-inline-start: 3px solid var(--co-line); padding-inline-start: 12px; margin-bottom: 14px}
+.cr-daily-modal .cr-daily-content section:first-child {border-color: var(--co-accent)}
+.cr-receipt[data-returned="true"] {color: var(--company-warning); background: var(--company-warning-bg)}

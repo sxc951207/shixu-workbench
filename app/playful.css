@@ -1,0 +1,65 @@
+/* Company accents are stable; backgrounds retain the brighter navy palette. */
+.app-shell{--company-accent:#a5ecff;--company-deep:#72d9ed;--company-glow:#65cde638;--company-soft:#65cde61f;--company-border:#a5ecff8c}
+.scope-chip,.company-switch label>svg,.company-tag{color:var(--company-accent)}
+.scope-chip,.company-switch label{border-color:var(--company-border)}
+.nav-item.active{color:var(--company-accent);background:var(--company-soft);box-shadow:inset 0 1px 0 var(--company-soft),0 0 24px var(--company-soft)}
+.bottom-nav button.active,.page-heading h1 .title-part:last-child,.focus-hero button,.hero-label{color:var(--company-accent)}
+.page-heading .eyebrow:before,.hero-label>span,.tiny-dot{background:var(--company-accent);box-shadow:0 0 9px var(--company-glow)}
+.app-shell .primary{background:var(--company-accent);border-color:var(--company-border);box-shadow:0 4px 24px var(--company-glow);color:#122b3c}
+.focus-hero{border-color:var(--company-border)}
+.core-halo{background:radial-gradient(var(--company-glow),transparent 68%)}
+.orbit{border-color:var(--company-border)}.orbit-track:after{background:var(--company-accent);box-shadow:0 0 12px var(--company-accent)}
+.panel-foot strong{font-weight:600;color:var(--company-accent)}
+.scope-shift-a :is(.overview-row,.dashboard-grid,.view-tools,.full-panel,.project-grid.expanded,.notes-grid,.links-grid,.settings-grid){animation:scope-arrive-a .38s ease backwards}
+.scope-shift-b :is(.overview-row,.dashboard-grid,.view-tools,.full-panel,.project-grid.expanded,.notes-grid,.links-grid,.settings-grid){animation:scope-arrive-b .38s ease backwards}
+@keyframes scope-arrive-a{from{opacity:.35;translate:0 9px}to{opacity:1;translate:0 0}}
+@keyframes scope-arrive-b{from{opacity:.35;translate:0 9px}to{opacity:1;translate:0 0}}
+
+/* Small, finite feedback flights never catch clicks or move layout. */
+.playful-overlay{position:fixed;inset:0;z-index:70;pointer-events:none;overflow:hidden;contain:strict}
+.completion-particle{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--company-accent);box-shadow:0 0 8px var(--company-accent);opacity:0;animation:particle-flight 1.05s cubic-bezier(.2,.7,.25,1) both}
+.completion-particle:nth-child(3n){width:3px;height:9px;border-radius:2px;background:#fff}
+.completion-arrival{position:absolute;width:28px;height:28px;border:1px solid var(--company-accent);border-radius:50%;opacity:0;translate:-50% -50%;animation:arrival-ring .7s .85s ease-out both}
+.completion-arrival span{position:absolute;left:50%;top:-12px;white-space:nowrap;font-size:12px;color:var(--company-accent);text-shadow:0 1px 6px #102c44;translate:-50% -100%}
+@keyframes particle-flight{0%{opacity:0;transform:translate(0,0) scale(.4)}12%{opacity:1}48%{opacity:1;transform:translate(var(--mid-x),var(--mid-y)) scale(1.2)}90%{opacity:1}100%{opacity:0;transform:translate(var(--end-x),var(--end-y)) scale(.1)}}
+@keyframes arrival-ring{0%{opacity:0;scale:.5}20%{opacity:1}100%{opacity:0;scale:1.9}}
+.focus-celebration{position:absolute;left:50%;top:43%;width:90px;height:90px;translate:-50% -50%;display:grid;place-items:center}
+.focus-celebration i{position:absolute;inset:0;border:1px solid var(--company-accent);border-radius:50%;animation:focus-outward 1.6s ease-out both}
+.focus-celebration i:nth-child(2){animation-delay:.15s}.focus-celebration i:nth-child(3){animation-delay:.3s}
+.focus-celebration span{white-space:nowrap;color:#effcff;font-size:18px;letter-spacing:2px;padding:12px 21px;border-radius:30px;background:#183951e8;box-shadow:0 0 30px var(--company-glow);animation:focus-words 1.7s ease both}
+@keyframes focus-outward{from{scale:.5;opacity:.85}to{scale:5;opacity:0}}
+@keyframes focus-words{0%,100%{opacity:0;transform:translateY(8px)}15%,80%{opacity:1;transform:translateY(0)}}
+.timer-display{isolation:isolate}.timer-energy,.timer-wave{position:absolute;inset:0;border-radius:50%;pointer-events:none}
+.timer-energy{inset:3%;opacity:0;transition:opacity .3s;background:conic-gradient(transparent 30%,var(--company-soft) 65%,var(--company-accent) 94%,transparent);mask:radial-gradient(transparent 65%,#000 67%,#000 69%,transparent 71%)}
+.timer-display.running .timer-energy{opacity:.9;animation:energy-orbit 3.4s linear infinite}
+.timer-display circle:last-child{stroke:var(--company-accent)}
+.timer-wave{border:1px solid var(--company-accent);opacity:0}
+.focus-rewarding .timer-wave{animation:timer-ripple 1.4s ease-out both}
+@keyframes energy-orbit{to{transform:rotate(360deg)}}@keyframes timer-ripple{from{opacity:.9;scale:.85}to{opacity:0;scale:1.55}}
+
+/* The buddy sits below reminders and dialogs; only its buttons take input. */
+.workspace-buddy{position:fixed;right:26px;bottom:24px;width:90px;height:116px;z-index:50;pointer-events:none;transition:opacity .2s,visibility .2s}
+.workspace-buddy.is-typing{opacity:0;visibility:hidden}
+.buddy-button{position:absolute;inset:6px 0 0;width:90px;height:108px;padding:0;background:none;border:0;cursor:pointer;pointer-events:auto;filter:drop-shadow(0 8px 15px #061b4670)}
+.buddy-button svg{width:90px;height:108px;overflow:visible}
+.buddy-core{animation:buddy-float 4s ease-in-out infinite;transform-origin:60px 110px}
+.buddy-eyes{transform-origin:60px 55px;animation:buddy-blink 6s infinite}
+.buddy-antenna circle{animation:buddy-beacon 3.5s ease-in-out infinite}
+.buddy-smile{opacity:.85}.buddy-sleep{display:none}
+.buddy-close{position:absolute;right:-9px;top:-10px;width:44px;height:44px;display:grid;place-items:center;border:0;background:none;color:#9dbdd5;cursor:pointer;pointer-events:auto;border-radius:50%;z-index:1}
+.buddy-close svg{width:16px;height:16px;background:#1a334ce6;border:1px solid #6f9bb4;border-radius:50%;padding:3px;box-sizing:content-box}
+.buddy-close:hover{color:#e8faff}.buddy-close:focus-visible,.buddy-button:focus-visible,.buddy-restore:focus-visible{outline:2px solid var(--company-accent);outline-offset:3px}
+.buddy-speech{position:absolute;right:78px;bottom:48px;max-width:190px;width:max-content;padding:11px 14px;border-radius:14px 14px 3px 14px;background:#24445ef2;border:1px solid var(--company-border);box-shadow:0 6px 25px #061b3c33;color:#e4f5ff;font-size:12px;line-height:1.7;pointer-events:none}
+.buddy-speech:empty{display:none}
+.buddy-restore{position:absolute;right:0;bottom:0;display:grid;place-items:center;width:46px;height:46px;background:#254a65f2;border:1px solid var(--company-border);border-radius:16px;box-shadow:0 0 22px var(--company-soft);color:var(--company-accent);cursor:pointer;pointer-events:auto}
+.sleepy .buddy-eyes{animation:none;transform:scaleY(.15)}.sleepy .buddy-core{animation:buddy-nap 5s ease-in-out infinite}.sleepy .buddy-sleep{display:block;position:absolute;right:1px;top:2px;letter-spacing:4px;font-size:12px;color:var(--company-accent);animation:buddy-zz 3s ease-out infinite}
+.happy .buddy-core{animation:buddy-happy .6s ease-in-out 3}.happy .buddy-eyes{animation:none;transform:scaleY(.6)}
+.happy .buddy-arm.right,.wave .buddy-arm.right{transform-origin:88px 98px;animation:buddy-wave .45s ease-in-out 6 alternate}
+@keyframes buddy-float{50%{transform:translateY(-5px)}}@keyframes buddy-blink{0%,43%,47%,100%{transform:scaleY(1)}45%{transform:scaleY(.1)}}
+@keyframes buddy-beacon{50%{opacity:.45}}@keyframes buddy-nap{50%{transform:translateY(2px) rotate(-3deg)}}@keyframes buddy-zz{0%{opacity:0;transform:translateY(4px)}30%{opacity:.8}100%{opacity:0;transform:translateY(-13px)}}
+@keyframes buddy-happy{40%{transform:translateY(-9px) rotate(5deg)}70%{transform:translateY(-3px) rotate(-3deg)}}@keyframes buddy-wave{to{transform:rotate(-85deg)}}
+@media(max-width:760px){.workspace-buddy{right:14px;bottom:calc(88px + env(safe-area-inset-bottom));width:68px;height:92px}.buddy-button,.buddy-button svg{width:68px;height:85px}.buddy-close{top:-14px;right:-9px}.buddy-speech{right:61px;bottom:32px;max-width:205px;font-size:11px;padding:9px 12px}.buddy-restore{width:44px;height:44px}.completion-particle{box-shadow:0 0 4px var(--company-accent)}.focus-celebration span{font-size:15px}.scope-shift-a :is(.overview-row,.dashboard-grid),.scope-shift-b :is(.overview-row,.dashboard-grid){animation-duration:.25s}}
+.motion-off :is(.completion-particle,.completion-arrival,.focus-celebration,.timer-wave,.timer-energy){display:none!important}
+.motion-off :is(.overview-row,.dashboard-grid,.view-tools,.full-panel,.project-grid.expanded,.notes-grid,.links-grid,.settings-grid),.static-buddy *{animation:none!important;transition:none!important}
+@media(prefers-reduced-motion:reduce){.playful-overlay,.timer-energy,.timer-wave{display:none!important}.app-shell :is(.overview-row,.dashboard-grid,.view-tools,.full-panel,.project-grid.expanded,.notes-grid,.links-grid,.settings-grid),.workspace-buddy *{animation:none!important;transition:none!important}}
+@media(forced-colors:active){.playful-overlay,.timer-energy,.timer-wave{display:none}.buddy-restore,.buddy-close{border:1px solid ButtonText}}

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+public/ocr/v7/core/
+public/ocr/v7/worker.min.js
+.env
+.env.*
+!.env.example
+.cloud-secrets/
+*.log
+*.tsbuildinfo
+.DS_Store

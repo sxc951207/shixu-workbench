@@ -1,0 +1,63 @@
+/* Personal workspace. The compact desktop widget has its own palette. */
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view],:root:not([data-company-theme="dark"]) .login.cloud-login:not(.desktop-login) {
+  color-scheme:light;--bg:#f4f7fa;--paper:#fbfdff;--ink:#1e293b;--muted:#52657b;
+  --soft:#edf3fa;--line:#d6e2ed;--green:#195abb;color:var(--ink);
+  background:radial-gradient(ellipse at 30% 0%,#daeaff,transparent 44rem),
+    radial-gradient(ellipse at 98% 32%,#e9e4fb,transparent 42rem),var(--bg);
+}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] .ambient-aurora {opacity:.1}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.ambient-grid,.ambient-stars,.cursor-halo) {opacity:.07}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.sidebar,.topbar,.bottom-nav) {
+  background:rgba(248,252,255,.94);border-color:var(--line);color:var(--ink);backdrop-filter:blur(16px);
+}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.panel,.stat-card,.project-card,.note-card,.link-card,.focus-hero) {
+  background:radial-gradient(340px circle at var(--card-x,-450px) var(--card-y,-450px),#bee1ff66,transparent 86%),rgba(255,255,255,.78);
+  border:1px solid #fff;box-shadow:0 8px 30px rgba(0,50,100,.055),inset 0 1px 0 #fff;
+}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.stat-card,.focus-hero) {backdrop-filter:blur(16px)}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] .focus-hero {
+  background:radial-gradient(ellipse at 90% 70%,#c9eaff 0,transparent 53%),linear-gradient(110deg,#fbfdff,#e7f1ff 63%,#e5e2f8);
+}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] .focus-hero h2 {color:#193452}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] .page-heading h1 {color:var(--ink);font-size:clamp(24px,2vw,28px)}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] .stat-card>div {color:#182f4d;background:none;text-shadow:none;font-variant-numeric:tabular-nums}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.brand,.section-heading h2,.panel h2,.panel h3,.project-card h3,.note-card h3,.link-card strong,.sidebar .profile strong,.daily-task-main strong,.task-main strong,.timer-display>span,.daily-empty strong,.modal h2,.modal label,.week-days strong,.shortcuts a,.backup-counts strong) {color:var(--ink)}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.panel p,.focus-hero p,.stat-card p,.page-subtitle,.breadcrumb,.sync-button,.brand small,.section-heading p,.stat-card>span,.stat-card>div small,.empty,.empty p,.quick-hint,.quiet-card p,.space-label,.side-heading,.side-empty,.side-project,.page-footer,.panel-foot,.company-toolbar>span,.daily-foot,.quick-date,.week-days small,.modal-caption,.view-tools,.note-content,.note-footer,.profile small,.settings-card p,.daily-rule-main,.panel small,.project-footer,.attention-list small,.backup-foot) {color:var(--muted)}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.eyebrow,.hero-label,.text-button,.scope-chip,.title-part:last-child,.daily-counter,.week-days em,.focus-hero button,.icon-button,.bottom-nav button.active,.daily-state,.stat-card>span svg,.brand .zb-brand b) {color:#1958b3}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.quiet-card,.secondary,.search-box,.quick-add,.company-switch label,.global-search-trigger,.global-search-trigger kbd,.week-days button,.daily-empty,.new-project-card,.daily-rule,.daily-rules,.add-shortcut,.avatar,.settings-icon,.empty-icon,.backup-overview,.backup-policy,.backup-information,.daily-task,.focus-hero button,.global-results button:hover,.shortcuts a,.quick-date,.buddy-speech) {
+  background:#f0f5fb;color:#344e6e;border-color:var(--line);
+}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.nav-item,.bottom-nav button,.filters button,.breadcrumb strong) {color:#465a73}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.nav-item.active,.nav-item:hover,.filters button.selected,.week-days button.selected,.company-report-link,.routine-presets button.selected,.routine-weekdays button.selected) {background:#e5efff;color:#184fae;border-color:#c3dafa}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] .nav-item.active:before {background:#337bef;box-shadow:0 0 8px #337bef25}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.nav-item em,.daily-counter,.attention-count,.type-label,.task-project,.company-tag) {background:#e7f0ff;color:#184f9e}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.quick-submit,.primary),:root:not([data-company-theme="dark"]) .login.cloud-login:not(.desktop-login) .primary {background:linear-gradient(115deg,#286add,#1954ba);border-color:#2a64c8;color:#fff;box-shadow:0 4px 14px #1255bc24}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.task-row,.daily-foot,.side-projects,.panel-foot,.project-footer,.daily-task,.daily-rule,.modal-actions,.attention-list>button,.global-results button,.backup-counts,.cloud-backup-row,.project-next,.shortcuts,.backup-overview) {border-color:var(--line)}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.modal,.search-dialog,.nudge-alert,.toast),:root:not([data-company-theme="dark"]) .login.cloud-login:not(.desktop-login) .cloud-login-form {background:#f9fcff;color:var(--ink);border-color:#d6e3f0;box-shadow:0 15px 48px #26416624}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(input:not([type=checkbox]),select,textarea),:root:not([data-company-theme="dark"]) .login.cloud-login:not(.desktop-login) input {color:#21344a;background-color:#fbfdff;border-color:#cad9e8}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.company-switch option,.modal option) {color:#21344a;background:#fff}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(input,textarea)::placeholder {color:#60768e}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.quick-add,.search-box) input {background:transparent}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] .form-error,:root:not([data-company-theme="dark"]) .login.cloud-login:not(.desktop-login) .form-error {color:#a22c32}
+:root:not([data-company-theme="dark"]) .login.cloud-login:not(.desktop-login) :is(h1,.cloud-form-title,label) {color:#203047}
+:root:not([data-company-theme="dark"]) .login.cloud-login:not(.desktop-login) :is(p,small,.member-home-link) {color:#52657b}
+:root:not([data-company-theme="dark"]) .login.cloud-login:not(.desktop-login) .company-report-link {background:#e6f0ff;border-color:#c3d8f7;color:#1852a6}
+@media (max-width:760px) {:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.stat-card,.focus-hero) {backdrop-filter:none}}
+@media(forced-colors:active) {:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] .stat-card>div {color:CanvasText}}
+
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] .sidebar {scrollbar-width:thin;scrollbar-color:#c2d3e6 transparent}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] :is(.quick-add>svg,.section-heading>svg,.section-heading h2 svg,.daily-empty svg,.company-switch label svg) {color:#356bb3}
+:root:not([data-company-theme="dark"]) .app-shell[data-workspace-view] .daily-empty {border-radius:12px}
+:root:not([data-company-theme="dark"]) .login.cloud-login:not(.desktop-login) .zb-scene {background:linear-gradient(120deg,#eef6ff,#dcecfb 75%,#e6e2fa);color:#203855;border-color:white}
+:root:not([data-company-theme="dark"]) .login.cloud-login:not(.desktop-login) .zb-brand {text-shadow:none}
+
+/* The same control is available before sign-in and throughout personal views. */
+:is(.app-shell[data-workspace-view] .top-actions,.cloud-login) .co-theme-toggle {
+  display:inline-grid;place-items:center;flex:none;width:40px;height:40px;border-radius:12px;
+  color:#285486;border:1px solid #cdddec;background:#f9fcff;cursor:pointer
+}
+html[data-company-theme="dark"] :is(.app-shell[data-workspace-view] .top-actions,.cloud-login) .co-theme-toggle {
+  background:#223952;border-color:#46617a;color:#c5e3ff
+}
+.cloud-login:not(.desktop-login)>.co-theme-toggle {position:absolute;right:max(14px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));z-index:2}
+@media(max-width:760px){:is(.app-shell[data-workspace-view] .top-actions,.cloud-login) .co-theme-toggle {min-height:44px;min-width:44px}}

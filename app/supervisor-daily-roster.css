@@ -1,0 +1,17 @@
+.co-daily-roster { margin: 12px 0; padding: 16px; background: var(--co-card); border: 1px solid var(--co-line); border-radius: 12px; color: var(--co-text); }
+.co-daily-roster header, .co-daily-roster li, .co-roster-assignment { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 14px; }
+.co-daily-roster h2, .co-daily-roster h3 { margin: 4px 0; }
+.co-daily-roster h2 { font-size: 18px; }
+.co-daily-roster h3 { font-size: 14px; }
+.co-daily-roster label { display: grid; gap: 3px; font-size: 12px; }
+.co-daily-roster input, .co-daily-roster select { max-width: 100%; min-height: 42px; color: var(--co-text); background: var(--co-panel); border: 1px solid var(--co-line); border-radius: 7px; padding: 5px 8px; }
+.co-daily-roster ul { padding: 0; margin: 0 0 12px; list-style: none; }
+.co-daily-roster li { padding: 8px 0; border-bottom: 1px solid var(--co-line); }
+.co-daily-roster li small { display: block; color: var(--co-muted); }
+.co-daily-roster summary { padding: 8px 0; cursor: pointer; }
+.co-roster-assignment { align-items: end; justify-content: flex-start; }
+.co-roster-filters { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; max-width: 640px; margin-top: 10px; }
+.co-roster-counts { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.co-roster-counts span { white-space: nowrap; }
+.co-daily-roster .co-roster-due-only { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; }
+.co-roster-due-only input { min-height: auto; accent-color: var(--co-accent); }

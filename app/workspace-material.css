@@ -1,0 +1,84 @@
+/* Shared edges, surface lighting, spacing and motion for company and personal work. */
+.zb-loading {min-height:75vh;display:grid;place-items:center;font:500 15px/1.5 system-ui;color:inherit}
+:root {
+  --zb-cyan: #70efdf;
+  --zb-radius: 14px;
+  --zb-step: clamp(14px, 2vw, 26px);
+  --zb-fast: 160ms;
+  --zb-ease: cubic-bezier(.2,.75,.25,1);
+}
+.zb-brand {display:inline-flex;align-items:center;gap:.38em;white-space:nowrap;line-height:1;color:inherit}
+.zb-brand {max-width:100%;min-width:0}
+.zb-brand strong {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;font-size:1em;letter-spacing:.055em;color:inherit}
+.zb-brand b {font-size:.64em;font-weight:600;letter-spacing:.03em}
+.zb-brand>span {font-size:.68em;opacity:.45;font-weight:350}
+.zb-brand i {position:relative;display:inline-block;flex:none;width:1.16em;height:1.2em;background:linear-gradient(145deg,#124b57,#12263f);border-radius:27%;box-shadow:inset 0 0 0 1px #70efdf50}
+.zb-brand i::before,.zb-brand i::after {content:"";position:absolute;bottom:19%;width:32%;height:56%;background:linear-gradient(136deg,#e2ffcb,#53ddd5 54%,#19899a 55%,#2195a3);border-radius:0 82% 0 80%;transform-origin:bottom right}
+.zb-brand i::before {left:15%;transform:rotate(-15deg) scale(.8)}
+.zb-brand i::after {right:20%;height:68%;border-radius:80% 0 80% 0;transform:rotate(9deg)}
+.zb-scene {
+  position:relative; isolation:isolate; overflow:hidden; box-sizing:border-box;
+  border:1px solid #3b6770;border-radius:var(--zb-radius);
+  min-height:clamp(138px,17vw,222px);display:flex;align-items:center;padding:var(--zb-step);
+  color:#f1fff9;background:
+    radial-gradient(ellipse at 61% 112%,#21515b 0%,transparent 51%),
+    linear-gradient(106deg,#122b35 5%,#123d4a 54%,#172e50);
+}
+.zb-scene::after {content:"";position:absolute;pointer-events:none;z-index:-1}
+.zb-scene::after {inset:-45% 8% -50% 45%;border-radius:50%;background:radial-gradient(ellipse,#36fbd72c,transparent 67%);transform:rotate(-20deg)}
+.company-app .co-brand {max-width:min(32vw,260px);min-width:0}
+.app-shell .sidebar .brand .zb-brand {font-size:24px;line-height:1.2}
+.zb-scene .zb-brand {max-width:85%;font-size:clamp(26px,4.2vw,62px);text-shadow:0 1px 7px #0a233f70}
+.zb-scene .co-light-ribbon {position:absolute;pointer-events:none;z-index:-1;inset:0;width:100%;height:100%;mask-image:linear-gradient(90deg,transparent 27%,#000 49%,#000 87%,transparent)}
+.zb-scene-compact {margin-bottom:16px;min-height:clamp(105px,11vw,148px)}
+.zb-scene-compact .zb-brand {font-size:clamp(23px,3vw,38px)}
+.zb-scene button.zb-motion {position:absolute;right:10px;bottom:8px;display:grid;place-items:center;min-width:34px;height:34px;border-radius:50%;background:#0a293dba;color:#e9fff9;border:1px solid #abf3e45c;cursor:pointer}
+.zb-scene button.zb-motion:focus-visible {outline:2px solid white;outline-offset:2px}
+html[data-company-theme] .co-studio-login .zb-entry-layout {grid-template-areas:"brand brand" "sign cover";grid-template-rows:auto 1fr;align-items:stretch}
+.zb-entry-layout>.zb-scene {grid-area:brand;border:0;border-radius:0;min-height:clamp(144px,15vw,208px);padding-inline:clamp(22px,4.3vw,58px)}
+.login.cloud-login>.zb-scene {width:min(100%,520px);margin:0 auto 14px;text-align:left}
+.company-app .zb-heading-copy {display:flex;align-items:center;gap:14px;min-width:0}
+.zb-heading-copy>div {min-width:0}
+.zb-heading-copy p {margin:5px 0 0;color:var(--co-muted);line-height:1.5}
+.zb-section-mark {display:inline-grid;place-items:center;position:relative;isolation:isolate;flex:none;width:44px;height:44px;border-radius:13px;color:var(--co-accent,#24548a);background:linear-gradient(147deg,var(--co-card,#fff),var(--co-soft,#e7effa));border:1px solid var(--co-border,#cdd9e5);box-shadow:inset 1px 1px 0 #ffffff55,0 6px 13px -9px #174b7075}
+.zb-section-mark::before {content:"";position:absolute;z-index:-1;inset:5px -3px -3px 6px;border-right:2px solid #5fc8c2;border-bottom:2px solid #5fc8c2;border-radius:11px;opacity:.6}
+html[data-company-theme] .company-app {background-image:radial-gradient(ellipse at top right,color-mix(in srgb,var(--co-accent) 6%,transparent),transparent 700px)}
+html[data-company-theme] .company-app :is(.co-page-heading,.ch-heading,.op-heading) {background:linear-gradient(118deg,var(--co-card),color-mix(in srgb,var(--co-soft) 64%,var(--co-card)));border:1px solid var(--co-border);border-radius:var(--zb-radius);padding:var(--zb-step);box-shadow:var(--company-shadow)}
+html[data-company-theme] .company-app :is(.co-project-card,.co-panel,.co-stats>span,.dl-stats>span,.co-member-row,.cr-items,.op-card) {border-color:var(--co-border);background-image:linear-gradient(115deg,color-mix(in srgb,var(--co-accent) 3%,transparent),transparent 42%);box-shadow:inset 0 1px 0 color-mix(in srgb,var(--co-card) 70%,transparent),var(--company-shadow)}
+html[data-company-theme] .company-app :is(.co-primary,.op-button.primary) {background-image:linear-gradient(130deg,#ffffff18,transparent 60%);box-shadow:inset 0 1px 0 #ffffff45,0 4px 10px -8px #10234d}
+html[data-company-theme] .company-app :is(button,input,select,textarea,summary,a):focus-visible {outline:2px solid var(--co-accent);outline-offset:2px}
+html[data-company-theme] .company-app .co-topbar {background:color-mix(in srgb,var(--co-card) 96%,var(--co-soft))}
+.app-shell[data-workspace-view] :is(.panel,.stat-card,.project-card,.note-card,.link-card) {background-image:linear-gradient(135deg,#85dff709,transparent 46%);box-shadow:inset 0 1px 0 #a9edff16,0 8px 22px -19px #0007}
+.app-shell .focus-hero>.zb-scene {position:absolute;inset:0 0 0 auto;width:43%;height:100%;margin:0;border:0;border-radius:0;background:transparent;min-height:0;padding:0}
+.app-shell .focus-hero>.zb-scene .zb-brand {display:none}
+.app-shell .focus-hero>.zb-scene .co-light-ribbon {mask-image:linear-gradient(90deg,transparent,#000 24%)}
+.app-shell .focus-hero>div:first-child {position:relative;z-index:1;max-width:62%}
+@media(min-width:791px) {
+  html[data-company-theme] .co-studio-login .zb-entry-layout {grid-template-areas:"brand sign" "cover sign";grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr);grid-template-rows:minmax(280px,1fr) auto;max-width:968px}
+  .zb-entry-layout>.zb-scene {align-items:flex-start;padding:32px;min-height:300px}
+  .zb-entry-layout>.zb-scene .zb-brand {font-size:40px}
+  .zb-entry-layout>.zb-scene .co-light-ribbon {top:22%;left:0;height:78%;mask-image:linear-gradient(0deg,transparent,#000 12%,#000 92%,transparent)}
+  .zb-entry-layout>.co-entry-art {padding:24px 32px;border-left:0}
+  html[data-company-theme] .co-studio-login .zb-entry-layout>.co-entry-form {padding:clamp(28px,3.2vw,50px)}
+}
+.co-studio-login .co-entry-brand.zb-back-link {gap:6px;color:var(--co-muted);font-size:14px;font-weight:550;letter-spacing:0}
+.zb-back-link svg {transform:rotate(180deg)}
+@media(max-width:790px) {
+  html[data-company-theme] .co-studio-login .zb-entry-layout {grid-template-areas:"brand" "sign" "cover";grid-template-columns:1fr}
+  .zb-entry-layout>.zb-scene {min-height:118px}
+  .zb-entry-layout>.zb-scene .co-light-ribbon {left:25%;width:75%;mask-image:linear-gradient(90deg,transparent,#000 42%)}
+  .zb-heading-copy {gap:9px}
+  .zb-section-mark {width:35px;height:35px;border-radius:10px}
+  .zb-section-mark svg {width:19px}
+  html[data-company-theme] .company-app :is(.co-page-heading,.op-heading,.ch-heading) {padding:13px}
+  .company-app .co-topbar .zb-brand {font-size:21px}
+}
+@keyframes zb-breathe {0%,100%{opacity:.52;transform:scale(.91)}50%{opacity:1;transform:scale(1.13)}}
+@keyframes zb-arrive {from{opacity:.6;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:no-preference) {
+  .zb-scene[data-still="false"]::after {animation:zb-breathe 5s ease-in-out 2}
+  .company-app :is(.zb-heading-copy,.ch-heading>.zb-section-mark) {animation:zb-arrive 220ms var(--zb-ease)}
+  .company-app :is(.co-primary,.op-button,.zb-section-mark) {transition:background-color var(--zb-fast),box-shadow var(--zb-fast),transform var(--zb-fast)}
+}
+@media(prefers-reduced-motion:reduce){.zb-scene button.zb-motion{display:none}}
+@media print {.zb-scene,.zb-section-mark{display:none}}

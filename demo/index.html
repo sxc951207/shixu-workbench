@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>拾序 · 本地角色演示</title>
+<style>
+:root{color-scheme:light dark;font-family:system-ui,"Microsoft YaHei",sans-serif}body{max-width:44rem;margin:9vh auto;padding:0 1.25rem;line-height:1.65}h1{font-size:2.4rem;margin:.2em 0}p{margin:.6rem 0 1.3rem}form{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:.8rem}button{display:grid;gap:.3rem;padding:1.2rem;text-align:left;border-radius:.75rem;border:1px solid #77909580;background:transparent;color:inherit;cursor:pointer;font:inherit}button:hover,button:focus-visible{border-color:#367e87;outline:2px solid #367e87}strong{font-size:1.25rem}small{font-size:.9rem}nav{display:flex;flex-wrap:wrap;gap:1.3rem;margin-top:1.5rem}a{color:inherit}
+</style><main>
+<h1>拾序工作台</h1><p>选择角色进入同一个示例团队。昨天有一笔已确认的经营数据，今天有一笔待主管审核。可返回本页切换身份。</p>
+<form method="post" action="/demo/enter">
+<button name="role" value="staff"><strong>员工</strong><small>填写项目日报和经营数据</small></button>
+<button name="role" value="manager"><strong>主管</strong><small>核对填报、确认或退回</small></button>
+<button name="role" value="leader"><strong>领导</strong><small>查看已确认数据和项目进展</small></button>
+<button name="role" value="admin"><strong>管理员</strong><small>管理成员、项目和备份</small></button>
+</form><nav><a href="/workbench/?space=company&preview=company">看只读演示</a><a href="/workbench/?space=company&preview=templates">试用数据模板</a></nav>
+<p><small>数据保存在本次服务进程中。关闭服务后，再次启动会重新生成示例数据。网页在本浏览器保留的填写草稿可通过清除此站点数据移除。</small></p>
+</main></html>

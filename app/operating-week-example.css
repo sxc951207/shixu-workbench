@@ -1,0 +1,53 @@
+.otp-week{margin-top:22px;border:1px solid #d7e3f1;border-radius:15px;background:white;overflow:hidden}
+/* This standalone example has a light sheet, including inside a dark workspace. */
+.otp-week {
+  color-scheme: light;
+  --co-card: #fff;
+  --co-panel: #f6f9fd;
+  --co-text: #223852;
+  --co-muted: #52677e;
+  --co-accent: #255fa8;
+  --co-border: #dce5ee;
+  --co-soft: #eaf2ff;
+  --company-warning: #765710;
+  --company-warning-bg: #fff8e8;
+}
+.otp-week-toggle{width:100%;display:flex;align-items:center;gap:14px;padding:15px 18px;background:linear-gradient(100deg,#f3f7ff,#fff);color:#223852;border:0;text-align:left}
+.otp-week-mark{border-radius:10px;display:grid;place-items:center;width:39px;height:39px;flex-shrink:0;background:#e4eeff;color:#245eb1}
+.otp-week-name{display:grid;gap:3px}.otp-week-name strong{font-size:15px}.otp-week-name small{font-size:12px;color:#556a80}
+.otp-week-action{margin-left:auto;display:flex;align-items:center;gap:6px;color:#2259a3;font-size:13px;font-weight:600;white-space:nowrap}
+.otp-week-toggle[aria-expanded=true] .otp-week-action svg{transform:rotate(180deg)}
+.otp-week-detail{border-top:1px solid #dce7f2;padding:16px 20px 20px;min-width:0}
+.otp-week-scenarios{display:inline-flex;gap:3px;padding:3px;background:#edf2f9;border:1px solid #d7e2ef;border-radius:10px;margin-bottom:14px}
+.otp-week-scenarios button{padding:7px 14px;min-height:36px;border:0;border-radius:7px;background:transparent;color:#415870;font-size:13px}
+.otp-week-scenarios button[aria-pressed=true]{background:#fff;color:#2056a3;box-shadow:0 1px 4px #2b4b6f24;font-weight:650}
+.otp-week :is(button,summary):focus-visible{outline:3px solid #4c83d6;outline-offset:-3px}
+.otp-week .oc-comparison{color:#223852}
+.otp-week .oc-scope{border-color:#dde5ed}
+.otp-week :is(.oc-scope>span,.oc-periods>svg,.oc-numbers small,.oc-coverage summary){color:#255fa8}
+.otp-week .oc-comparison :is(.oc-periods p,.oc-periods small,.oc-method,.oc-definition,.oc-filters label,.oc-numbers span,.oc-coverage p,.oc-note,.oc-footer,.oc-table-scroll small){color:#52677e!important}
+.otp-week .oc-comparison :is(.oc-periods>div,.oc-numbers>div,.oc-table-scroll thead,.oc-note){background:#f6f9fd;border-color:#d8e4f1}
+.otp-week :is(.oc-coverage,.oc-table-scroll,.oc-table-scroll td,.oc-table-scroll th,.oc-footer){border-color:#dce5ee}
+.otp-week .oc-comparison .oc-numbers .oc-difference{background:#eaf2ff;border-color:#88aee4;color:#214e8a}
+.otp-week .oc-comparison :is(.oc-reasons,.oc-unavailable){border-color:#e4cb92;background:#fff8e8;color:#765710}
+.otp-week .oc-unavailable strong,.otp-week .oc-row-reason{color:#765710}
+.otp-week .oc-filters select{border:1px solid #cbd8e6;border-radius:8px;background:#fff;color:#223852;padding:7px 10px}
+.otp-week .oc-periods{margin-top:12px}
+.otp-week .oc-comparison h3{font-size:17px}
+@media(max-width:700px){.otp-week-detail{padding:13px 12px}.otp-week-toggle{gap:9px;padding:13px 10px}.otp-week-name small{font-size:11px}.otp-week-action{font-size:12px}.otp-week-mark{width:31px;height:34px}.otp-week .oc-periods>div{padding:10px}.otp-week .oc-numbers>div:last-child{grid-column:1/-1}.otp-week .oc-numbers strong{font-size:17px}}
+@media (max-width: 700px) {
+  .otp-week .oc-table-scroll {
+    --oc-store-surface: #fff;
+    --oc-store-heading: #f6f9fd;
+    --oc-store-divider: #dce5ee;
+    color: #223852;
+  }
+
+  .otp-week .oc-table-scroll thead th {
+    background-color: var(--oc-store-heading);
+  }
+
+  .otp-week .oc-comparison .oc-table-scroll .oc-row-reason {
+    color: #765710;
+  }
+}

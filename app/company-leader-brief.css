@@ -1,0 +1,182 @@
+.company-app .co-brief {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  color: var(--co-text);
+  padding: 0 0 14px;
+  margin: 16px 0;
+  border-bottom: 2px solid var(--co-accent);
+}
+.company-app .co-brief-copy {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  min-width: 0;
+}
+.company-app .co-brief h1 {
+  margin: 0;
+  font: inherit;
+  font-size: clamp(28px, 2.6vw, 38px);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -.04em;
+}
+.company-app .co-brief-scope { color: var(--co-muted); font-size: 13px; }
+.company-app .co-brief-count {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 2px 5px 8px;
+  min-height: 44px;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--co-accent);
+}
+.company-app .co-brief-count span { color: var(--co-muted); font-size: 13px; }
+.company-app .co-brief-count strong { font-size: 26px; line-height: 1.2; font-weight: 650; font-variant-numeric: tabular-nums; }
+.company-app .co-brief-count small { font-size: 13px; font-weight: 550; }
+.company-app .co-brief-count svg { align-self: center; }
+.company-app .co-brief-count:hover small { text-decoration: underline; text-underline-offset: 3px; }
+.company-app .co-brief-count:focus-visible { outline: 2px solid var(--co-accent); outline-offset: 2px; }
+#co-confirmed-projects { scroll-margin-top: 115px; }
+
+.company-app .co-brief-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(280px, 1fr);
+  border: 1px solid var(--co-border);
+  border-radius: 9px;
+  background: var(--co-card);
+}
+.company-app .co-brief-tools:has(.co-day-results) { grid-template-columns: minmax(0, 1fr); }
+html[data-company-theme] .company-app .co-brief-tools > :is(.co-day-overview, .meeting-history-entry, .co-corrections) {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  margin: 0;
+  padding: 20px 22px;
+}
+html[data-company-theme] .company-app .co-brief-tools > .meeting-history-entry { border-inline-start: 1px solid var(--co-border); }
+.company-app .co-brief-tools .co-history-title { display: flex; align-items: center; gap: 8px; margin: 0; }
+.company-app .co-brief-tools :is(.co-history-title,.co-day-heading h2) { font-size: 19px; line-height: 1.45; }
+.company-app .co-brief-tools :is(.co-history-title,.co-day-heading h2) svg {
+  box-sizing: border-box;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: transparent;
+  color: var(--co-accent);
+}
+.company-app .co-brief-tools .meeting-history-actions { grid-template-columns: minmax(0, 1fr); gap: 0; margin-top: 8px; }
+html[data-company-theme] .company-app .co-brief-tools .meeting-history-actions button {
+  grid-template-columns: 20px minmax(0, 1fr) 12px;
+  gap: 0 10px;
+  min-height: 58px;
+  padding: 8px 4px;
+  align-content: center;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--co-text);
+}
+html[data-company-theme] .company-app .co-brief-tools .meeting-history-actions button + button { border-block-start: 1px solid var(--co-border); }
+.company-app .co-brief-tools .meeting-history-actions button svg { grid-area: 1/1/3/2; }
+.company-app .co-brief-tools .meeting-history-actions button strong,
+.company-app .co-brief-tools .meeting-history-actions button small { grid-column: 2; }
+.company-app .co-brief-tools .meeting-history-actions button::after {
+  content: '';
+  grid-column: 3;
+  grid-row: 1 / 3;
+  align-self: center;
+  width: 6px;
+  height: 6px;
+  color: var(--co-accent);
+  border: solid currentColor;
+  border-width: 1.5px 1.5px 0 0;
+  transform: rotate(45deg);
+}
+html[data-company-theme] .company-app .co-brief-tools .meeting-history-actions button:hover:not(:disabled) {
+  background: var(--co-panel);
+  color: var(--co-accent);
+}
+html[data-company-theme] .company-app .co-brief-tools .meeting-history-actions button:focus-visible { outline: 2px solid var(--co-accent); outline-offset: -2px; }
+html[data-company-theme] .company-app .co-brief-tools > .co-corrections {
+  border-block-start: 1px solid var(--co-border);
+  padding-block: 13px;
+}
+.company-app .co-brief-tools .co-corrections-head h2 { font-size: 15px; }
+.company-app .co-brief-tools .co-corrections-head svg { width: 16px; height: 16px; }
+.company-app .co-brief-tools .co-corrections:not(:has(ul)) { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+.company-app .co-brief-tools .co-corrections:not(:has(ul)) > p { margin: 0; }
+
+@media (min-width: 901px) {
+  html[data-company-theme] .company-app .co-brief-tools:has(.co-day-results) > .meeting-history-entry {
+    border-inline-start: 0;
+    border-block-start: 1px solid var(--co-border);
+  }
+  .company-app .co-brief-tools:has(.co-day-results) .meeting-history-actions { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 20px; }
+  html[data-company-theme] .company-app .co-brief-tools:has(.co-day-results) .meeting-history-actions button + button { border-block-start: 0; }
+}
+@media (max-width: 900px) {
+  .company-app .co-brief-tools { grid-template-columns: minmax(0, 1fr); }
+  html[data-company-theme] .company-app .co-brief-tools > .meeting-history-entry {
+    border-inline-start: 0;
+    border-block-start: 1px solid var(--co-border);
+  }
+}
+@media (max-width: 640px) {
+  .company-app .co-brief { margin: 12px 0; padding-bottom: 9px; }
+  .company-app .co-brief-copy { flex-direction: column; gap: 3px; }
+  .company-app .co-brief h1 { font-size: 25px; }
+  .company-app .co-brief-scope, .company-app .co-brief-count span { font-size: 12px; }
+  .company-app .co-brief-count { display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 7px; row-gap: 1px; padding-block: 0; }
+  .company-app .co-brief-count span { grid-column: 1/-1; }
+  .company-app .co-brief-count strong { font-size: 20px; }
+  html[data-company-theme] .company-app .co-brief-tools > :is(.co-day-overview,.meeting-history-entry,.co-corrections) { padding: 15px; }
+  .company-app .co-brief-tools :is(.co-history-title,.co-day-heading h2) { font-size: 18px; }
+  .company-app .co-brief-tools .meeting-history-actions { margin-top: 4px; }
+  html[data-company-theme] .company-app .co-brief-tools .meeting-history-actions button { min-height: 56px; }
+  #co-confirmed-projects { scroll-margin-top: 70px; }
+}
+
+/* Confirmed projects share a register so their source, progress and actions line up. */
+html[data-company-theme] .company-app .co-confirmed-register { display:block; border-top:1px solid var(--co-border); }
+html[data-company-theme] .company-app .co-confirmed-register .co-project-card {
+  border:0; border-bottom:1px solid var(--co-border); border-radius:0;
+  box-shadow:none; padding:18px 20px; margin:0; animation:none;
+}
+html[data-company-theme] .company-app .co-confirmed-register .co-project-card:hover { box-shadow:none; border-color:var(--co-border); }
+html[data-company-theme] .company-app .co-confirmed-register .co-project-links { border:0; padding:0; }
+html[data-company-theme] .company-app .co-confirmed-register .co-project-links button {
+  background:transparent; border:0; box-shadow:none; color:var(--co-accent); justify-content:flex-start;
+}
+html[data-company-theme] .company-app .co-confirmed-register .co-project-links button:hover { text-decoration:underline; text-underline-offset:.2em; }
+@media(min-width:850px) {
+ html[data-company-theme] .company-app .co-confirmed-register .co-project-card {
+   display:grid; grid-template-columns:minmax(185px,1fr) minmax(120px,.6fr) minmax(240px,1.6fr) minmax(110px,.6fr);
+   column-gap:clamp(12px,2.3vw,38px); row-gap:5px; align-content:start; align-items:start;
+ }
+ .co-confirmed-register .co-card-top { grid-area:1/1; justify-content:flex-start; gap:10px; }
+ .co-confirmed-register .co-project-card>h2 { grid-area:2/1; font-size:20px; margin:0; }
+ .co-confirmed-register .co-project-people { grid-area:3/1; margin:0; }
+ .co-confirmed-register .co-progress-heading { grid-area:1/2; margin:0; }
+ .co-confirmed-register .co-progress { grid-area:2/2; margin:3px 0 0; }
+ .co-confirmed-register .co-project-card>dl { grid-area:1/3/5/4; margin:0; }
+ .co-confirmed-register .co-review-comment { grid-area:5/3; margin:0; }
+ .co-confirmed-register .co-project-links { grid-area:1/4/6/5; display:flex; flex-direction:column; align-items:stretch; gap:1px; margin:0; }
+ .co-confirmed-register .co-updated { grid-area:4/1; margin:2px 0 0; }
+}
+
+.company-app .co-day-next-action {padding:16px 0 6px;display:grid;gap:12px;color:var(--co-text)}
+.company-app .co-day-next-action>strong {font-size:16px;line-height:1.55}
+.company-app .co-day-find {display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px}
+.company-app .co-day-find small,.company-app .co-day-next-action p {color:var(--co-muted);font-size:12px;line-height:1.6;margin:0}
+.company-app .co-day-next-action .co-primary {min-height:42px;display:inline-flex;align-items:center;gap:8px}
+.company-app .co-day-project .co-day-expand {display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;padding:6px 10px;color:var(--co-accent);background:var(--co-soft);font-weight:650}
+@media(max-width:640px){
+ .company-app .co-day-find {align-items:flex-start;flex-direction:column}
+ .company-app .co-day-next-action .co-primary {min-height:44px}
+}

@@ -1,0 +1,7 @@
+.op-import-outcome{margin:16px 0;padding:12px 16px;border:1px solid var(--op-line);border-radius:9px}
+.op-import-outcome h4,.op-import-outcome p{margin:0 0 8px}
+.op-import-outcome ul{padding-inline-start:20px;margin:6px 0}
+.op-import-stage{padding:7px 0;border-top:1px solid var(--op-line)}
+.op-import-stage summary{cursor:pointer}
+.op-import-outcome .op-button{margin-top:10px}
+.op-last-import{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin:12px 0}.op-last-import small{color:var(--op-muted)}

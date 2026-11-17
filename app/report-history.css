@@ -1,0 +1,25 @@
+.meeting-history-entry,.report-history-nav{color:#ecf7ff;border:1px solid #9edce05c;border-radius:15px;background:linear-gradient(110deg,#315b70,#254357);padding:21px 23px;margin:0 0 22px;min-width:0;box-sizing:border-box}
+.meeting-history-entry>div>span{display:flex;align-items:center;gap:8px;font-size:12px;color:#b3f3ed;font-weight:650}
+.company-app .meeting-history-entry h2{font-size:21px;line-height:1.5;margin:10px 0 7px;color:#f2fbff}
+.meeting-history-entry p{font-size:13px;line-height:1.8;color:#d0e5ef;margin:0}
+.meeting-history-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:17px}
+.meeting-history-actions button{display:grid;grid-template-columns:23px minmax(0,1fr);gap:5px 9px;padding:15px;border:1px solid #abe7ee63;border-radius:10px;background:#102f4266;color:#e9fcff;text-align:left;font:inherit;cursor:pointer;min-height:78px}
+.meeting-history-actions button svg{grid-row:1/3;align-self:center;color:#b3f4f0}
+.meeting-history-actions strong{font-size:15px;line-height:1.6}
+.meeting-history-actions small{font-size:12px;color:#c4dce9;line-height:1.6}
+.report-history-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.company-app .report-history-nav h3{display:flex;align-items:center;gap:8px;margin:0;font-size:17px;color:#eaffff}
+.report-history-heading>span{display:flex;align-items:center;gap:6px;font-size:12px;color:#cce8ef}
+.report-history-period{display:flex;align-items:center;flex-wrap:wrap;gap:9px 13px;margin:15px 0}
+.report-history-period>span{font-size:12px;color:#fae1a5;background:#b67f1d24;border:1px solid #f4cd795e;border-radius:6px;padding:4px 8px}
+.report-history-period strong{font-size:20px;line-height:1.6;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.report-history-period b{font-size:12px;font-weight:500;color:#d6edf5}
+.report-history-buttons,.report-history-buttons>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.report-history-buttons{gap:12px 18px}
+.report-history-buttons button{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 13px;min-height:44px;border-radius:8px;border:1px solid #b4e4ed73;background:#1c3e52;color:#f0fbff;font:inherit;font-size:13px;line-height:1.5;cursor:pointer}
+.meeting-history-entry button:hover:not(:disabled),.report-history-nav button:hover:not(:disabled){background:#39657a;border-color:#c8fcff}
+.meeting-history-entry button:disabled,.report-history-nav button:disabled{opacity:.45;cursor:default}
+.meeting-history-entry button:focus-visible,.report-history-nav button:focus-visible{outline:2px solid #cbffff;outline-offset:3px}
+.company-app .report-history-nav>p{font-size:12px;line-height:1.8;color:#cee3ec;margin:13px 0 0}
+@media(max-width:700px){.meeting-history-entry,.report-history-nav{padding:16px 14px;border-radius:12px;margin-bottom:18px}.company-app .meeting-history-entry h2{font-size:19px}.meeting-history-actions{grid-template-columns:1fr;gap:9px}.meeting-history-actions button{min-height:72px;padding:12px}.report-history-heading>span{font-size:11px}.report-history-period{gap:7px;margin:12px 0}.report-history-period strong{font-size:17px;flex-basis:100%}.report-history-buttons{gap:10px}.report-history-buttons>div{width:100%}.report-history-buttons button{font-size:12px;flex:1;white-space:nowrap;padding:10px}.company-app .report-history-nav>p{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.report-history-nav button,.meeting-history-entry button{transition:none}}

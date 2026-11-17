@@ -1,0 +1,13 @@
+import cloudbase from '@cloudbase/node-sdk';
+import {createService,isOwnerSession} from './service';
+import {createHmac} from 'node:crypto';
+import {createCompanyStore} from './company/store';
+import {createCompanyService} from './company/service';
+import {createCloudStore} from './store';
+const app=cloudbase.init({env:process.env.TCB_ENV||cloudbase.SYMBOL_CURRENT_ENV});
+const db=app.database();
+const store=createCloudStore(db);
+const secret=process.env.WB_SESSION_SECRET||'',origin=process.env.WB_ORIGIN||'';
+const personal=createService(store,{secret,bootstrapHash:process.env.WB_BOOTSTRAP_HASH||'',origin});
+const company=createCompanyService(createCompanyStore(db),{secret:createHmac('sha256',secret).update('company-session-v1').digest('hex'),origin,ownerSession:async cookie=>{const result=await store.run(async state=>({state,response:{statusCode:200,isBase64Encoded:false,headers:{},body:JSON.stringify(isOwnerSession(cookie,state,secret))}}));return JSON.parse(result.body)===true;}});
+export const main=(event:Parameters<typeof personal>[0])=>(event.path||'').split('/').filter(Boolean).pop()==='team'?company(event):personal(event);

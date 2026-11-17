@@ -1,0 +1,14 @@
+export type OperatingBuiltinSheet='revenue'|'targets'|'meituan'|'douyin'|'meituan-stores'|'douyin-stores';
+export type OperatingSheet=OperatingBuiltinSheet|`tpl_${string}`;
+export type OperatingField={key:string;label:string;kind:'money'|'count'|'stars';required:boolean;definition?:string};
+export type OperatingMetric={key:string;label:string;numerator:string;denominator:string;format:'percent'|'ratio'|'money'};
+export type OperatingTemplate={id:string;name:string;description:string;dimension:'total'|'store';writer:'owner'|'supervisor'|'project-owner';fields:OperatingField[];metrics:OperatingMetric[];active:boolean};
+export type OperatingStore={id:string;name:string};
+export type OperatingConfig={projectId:string;stores:OperatingStore[];templates?:OperatingTemplate[];builtinSheets?:OperatingBuiltinSheet[];dimensionLabel?:string;revenueNote?:string;confirmedProjectName?:string};
+export type OperatingProposal={id:string;projectId:string;status:'submitted'|'returned';submittedBy:string;submittedName:string;submittedAt:string;comment:string;config:OperatingConfig;baseDigest:string};
+export type OperatingRow={storeId:string;storeName:string;values:Record<string,number|null>};
+export type OperatingRecord={submissionBatchId?:string;sharedAdSpend?:number;id:string;companyId:string;projectId:string;projectName:string;sheet:OperatingSheet;date:string;status:'draft'|'submitted'|'returned'|'approved';version:number;publishedVersion:number;writerLogin:string;reviewerLogin:string;submittedBy:string;submittedName:string;submittedAt:string|null;reviewerName:string;comment:string;amendmentReason?:string;createdAt:string;updatedAt:string;rows:OperatingRow[];published:OperatingSnapshot|null;template?:OperatingTemplate};
+export type OperatingSnapshot=Omit<OperatingRecord,'published'|'submissionBatchId'>;
+export type OperatingHead=Pick<OperatingRecord,'id'|'projectId'|'sheet'|'date'|'status'|'version'|'publishedVersion'|'submittedBy'>;
+export type OperatingIndex={revision:number;versions:number;items:OperatingHead[]};
+export type OperatingVersion={operating:OperatingRecord;action:string;actor:string;at:string};

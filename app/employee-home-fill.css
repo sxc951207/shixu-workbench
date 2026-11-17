@@ -1,0 +1,14 @@
+.employee-home-fill{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px 22px;margin-bottom:16px}
+.employee-fill-copy{display:flex;align-items:flex-start;gap:12px;min-width:0}
+.employee-fill-copy>svg{flex-shrink:0;margin-top:2px}
+.employee-fill-copy h2{font-size:15px;margin:0 0 5px}
+.employee-fill-copy strong{display:block;font-size:20px;line-height:1.4}
+.employee-fill-copy p{margin:4px 0 0;font-size:14px;line-height:1.5}
+.employee-fill-range{display:block;margin-top:6px;font-size:12px;line-height:1.5}
+.employee-fill-copy :is(strong,p){overflow-wrap:anywhere}
+.employee-home-fill .primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;text-decoration:none}
+@media(max-width:520px){.employee-home-fill{padding:15px 16px;gap:12px}.employee-home-fill .primary{width:100%}}
+
+.employee-fill-range summary{cursor:pointer;width:fit-content;padding-block:4px}
+.employee-fill-range p{max-width:46ch}
+:root:not([data-company-theme="dark"]) .app-shell .company-toolbar .member-home-link{color:#415d7a}

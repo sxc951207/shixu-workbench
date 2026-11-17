@@ -1,0 +1,186 @@
+.company-app .co-day-overview {
+  min-width: 0;
+  margin-top: 24px;
+  padding: 22px;
+  color: var(--co-text);
+  background: var(--co-card, var(--co-panel));
+  border: 1px solid var(--co-line);
+  border-radius: 10px;
+}
+.company-app .co-day-heading h2 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 18px; }
+.company-app .co-day-heading p,
+.company-app .co-day-method { margin: 8px 0 14px; color: var(--co-muted); font-size: 13px; line-height: 1.7; }
+.company-app .co-day-controls { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin: 16px 0 12px; }
+.company-app .co-day-controls label { display: grid; gap: 7px; color: var(--co-text); font-size: 13px; }
+.company-app .co-day-controls input { box-sizing: border-box; min-width: 172px; min-height: 40px; padding: 8px 10px; color: var(--co-text); background: var(--co-panel); border: 1px solid var(--co-line); border-radius: 6px; color-scheme: var(--company-scheme, light); }
+.company-app .co-day-load { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; }
+.company-app .co-day-load:disabled { opacity: .65; cursor: wait; }
+.company-app .co-day-shortcuts { display: flex; align-items: center; gap: 5px; min-height: 40px; }
+.company-app .co-day-shortcuts button { padding: 7px 10px; color: var(--co-text); background: var(--co-panel); border: 1px solid var(--co-line); border-radius: 5px; font-size: 12px; }
+.company-app .co-day-shortcuts button[aria-pressed="true"] { color: var(--co-accent); border-color: var(--co-accent); background: var(--co-soft, var(--co-panel)); }
+.company-app .co-day-status { margin: 12px 0; color: var(--co-muted); font-size: 14px; line-height: 1.6; }
+.company-app .co-day-result-heading { margin: 18px 0 12px; color: var(--co-muted); font-size: 13px; }
+.company-app .co-day-project { min-width: 0; margin-top: 10px; border: 1px solid var(--co-line); border-radius: 7px; overflow: hidden; }
+.company-app .co-day-project > summary { display: grid; grid-template-columns: minmax(0, 1fr) minmax(160px, auto) auto; align-items: center; gap: 14px; padding: 14px 16px; background: var(--co-panel); list-style: none; }
+.company-app .co-day-project > summary::-webkit-details-marker { display: none; }
+.company-app .co-day-project > summary.co-day-without-revenue { grid-template-columns: minmax(0, 1fr) auto; }
+.company-app .co-day-project-empty { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; padding: 13px 16px; background: var(--co-panel); }
+.company-app .co-day-project-empty strong { min-width: 0; overflow-wrap: anywhere; }
+.company-app .co-day-project-empty span { color: var(--co-muted); font-size: 13px; }
+.company-app .co-day-overview summary { cursor: pointer; color: var(--co-text); line-height: 1.6; overflow-wrap: anywhere; }
+.company-app .co-day-overview summary span { margin-left: 12px; color: var(--co-muted); font-size: 12px; font-weight: 400; }
+.company-app .co-day-project-title { min-width: 0; display: grid; gap: 3px; }
+.company-app .co-day-project-title span { margin-left: 0; }
+.company-app .co-day-revenue { display: grid; gap: 3px; text-align: right; }
+.company-app .co-day-revenue strong { font-size: 20px; font-variant-numeric: tabular-nums; }
+.company-app .co-day-revenue small { color: var(--co-muted); font-size: 12px; }
+.company-app .co-day-project > summary .co-day-expand { margin-left: 0; color: var(--co-accent); white-space: nowrap; }
+.company-app .co-day-project[open] > summary .co-day-expand { font-size: 0; }
+.company-app .co-day-project[open] > summary .co-day-expand::after { content: '收起明细'; font-size: 12px; }
+.company-app .co-day-project-body { min-width: 0; padding: 4px 16px 12px; }
+.company-app .co-day-sheet { min-width: 0; padding-top: 12px; }
+.company-app .co-day-sheet > summary { margin-bottom: 8px; font-size: 14px; }
+.company-app .co-day-table-scroll { max-width: 100%; max-height: 390px; overflow: auto; border: 1px solid var(--co-line); border-radius: 5px; overscroll-behavior: contain; }
+.company-app .co-day-table-scroll table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.company-app .co-day-table-scroll caption { padding: 8px 10px; color: var(--co-muted); background: var(--co-panel); text-align: left; font-size: 12px; }
+.company-app .co-day-table-scroll :is(th, td) { padding: 10px 12px; border-bottom: 1px solid var(--co-line); white-space: nowrap; text-align: right; }
+.company-app .co-day-table-scroll thead th { position: sticky; top: 0; background: var(--co-panel); z-index: 1; font-weight: 550; }
+.company-app .co-day-table-scroll th:first-child { text-align: left; }
+.company-app .co-day-table-scroll tbody th { font-weight: 500; }
+.company-app .co-day-table-scroll small { color: var(--co-muted); font-weight: 400; }
+.company-app .co-day-table-scroll tbody tr:last-child > * { border-bottom: 0; }
+
+/* Keep each figure attached to its store while reading across a wide report. */
+.company-app .co-day-table-scroll tr > th:first-child {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 1;
+  background: var(--co-card);
+  box-shadow: inset -1px 0 var(--co-line);
+}
+.company-app .co-day-table-scroll thead tr > th:first-child {
+  z-index: 2;
+  background: var(--co-panel);
+}
+@media (max-width: 700px) {
+  .company-app .co-day-table-scroll { container-type: inline-size; }
+  .company-app .co-day-table-scroll caption > span {
+    position: sticky;
+    inset-inline-start: 10px;
+    display: block;
+    inline-size: fit-content;
+    max-inline-size: calc(100cqi - 20px);
+    overflow-wrap: anywhere;
+  }
+  .company-app .co-day-table-scroll tr > th:first-child {
+    min-inline-size: clamp(80px, 30cqi, 128px);
+    max-inline-size: clamp(80px, 30cqi, 128px);
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+.company-app .co-day-error { margin: 12px 0; padding: 12px; color: var(--company-danger, var(--co-text)); background: var(--company-danger-bg, var(--co-panel)); border: 1px solid var(--co-line); border-radius: 6px; }
+.company-app .co-day-error p { margin: 0 0 10px; }
+.company-app .co-day-error button { padding: 7px 10px; color: var(--co-text); background: var(--co-panel); border: 1px solid var(--co-line); border-radius: 5px; }
+.company-app .co-day-overview :is(input, button, summary, [tabindex]):focus-visible { outline: 2px solid var(--co-accent); outline-offset: 3px; }
+.co-day-spinning { animation: co-day-spin 1s linear infinite; }
+@keyframes co-day-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .co-day-spinning { animation: none; } }
+@media (max-width: 640px) {
+  .company-app .co-day-overview { padding: 14px; }
+  .company-app .co-day-controls { align-items: stretch; }
+  .company-app .co-day-controls label { flex: 1 1 150px; }
+  .company-app .co-day-load { flex: 1 1 150px; }
+  .company-app .co-day-project > summary { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 12px; }
+  .company-app .co-day-project-title { grid-column: 1 / -1; }
+  .company-app .co-day-revenue { text-align: left; }
+  .company-app .co-day-revenue strong { font-size: 18px; }
+  .company-app .co-day-project-body { padding: 2px 10px 10px; }
+  .company-app .co-day-project > summary span { display: block; margin-left: 0; }
+}
+
+/* This panel belongs to the leader's daily brief. Keep the native date picker
+   and the historical results in the same reading column. */
+.company-app .co-brief-tools .co-day-overview {
+  margin: 0;
+  padding: 22px;
+  border-radius: 14px;
+  background: var(--co-card);
+  box-shadow: var(--company-shadow);
+}
+.company-app .co-day-heading h2 { color: var(--co-text); font-size: 20px; letter-spacing: -.025em; }
+.company-app .co-day-heading h2 svg {
+  box-sizing: border-box;
+  width: 34px;
+  height: 34px;
+  padding: 7px;
+  color: var(--co-accent);
+  background: var(--co-soft);
+  border-radius: 9px;
+}
+.company-app .co-day-controls { gap: 8px 12px; }
+.company-app .co-day-controls label { gap: 4px; color: var(--co-muted); font-size: 12px; }
+.company-app .co-day-controls input { min-width: 0; min-height: 44px; font-size: 14px; color: var(--co-text); background: var(--co-card); }
+.company-app .co-day-shortcuts {
+  gap: 2px;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 2px;
+  border: 1px solid var(--co-line);
+  background: var(--co-panel);
+  border-radius: 8px;
+}
+.company-app .co-day-shortcuts button { min-height: 36px; padding: 5px 9px; border-color: transparent; color: var(--co-muted); font-size: 13px; }
+.company-app .co-day-shortcuts button[aria-pressed="true"] { border-color: var(--co-line); color: var(--co-accent); background: var(--co-card); box-shadow: 0 1px 3px #12284412; }
+.company-app .co-day-definition { margin: 8px 0; color: var(--co-muted); font-size: 12px; }
+.company-app .co-day-definition > summary { width: fit-content; min-height: 28px; line-height: 28px; color: var(--co-muted); }
+.company-app .co-day-definition .co-day-method { margin: 2px 0 10px; padding-inline-start: 11px; border-inline-start: 2px solid var(--co-line); }
+.company-app .co-day-status { margin: 8px 0 0; color: var(--co-muted); font-size: 13px; }
+.company-app .co-day-result-heading { padding-block: 8px; border-bottom: 1px solid var(--co-line); }
+.company-app .co-day-project { border-radius: 9px; }
+.company-app .co-day-revenue strong { color: var(--co-text); }
+.company-app .co-day-project[open] { border-color: color-mix(in srgb,var(--co-accent) 36%,var(--co-line)); }
+
+@media (max-width:640px) {
+  .company-app .co-brief-tools .co-day-overview { padding: 16px; }
+  .company-app .co-day-controls { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: end; gap: 8px; }
+  .company-app .co-day-controls input { width: 100%; }
+  .company-app .co-day-shortcuts { justify-self: end; }
+  .company-app .co-day-shortcuts button { flex: 1 0 auto; padding-inline: 6px; }
+  .company-app .co-day-load { grid-column: 1 / -1; }
+}
+
+@media (max-width: 700px), (pointer: coarse) {
+  .company-app .co-day-shortcuts button { min-width: 44px; min-height: 44px; }
+  .company-app .co-day-definition > summary { min-height: 44px; line-height: 1.5; padding-block: 13px; }
+}
+
+@media (max-width:360px) {
+  .company-app .co-day-controls { grid-template-columns: minmax(0,1fr); }
+  .company-app .co-day-shortcuts { justify-self: stretch; }
+}
+.company-app .co-day-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.company-app .co-day-controls select,
+.company-app .co-day-drill select {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 7px 10px;
+  color: var(--co-text);
+  background: var(--co-card);
+  border: 1px solid var(--co-line);
+  border-radius: 7px;
+  font: inherit;
+  font-size: 13px;
+}
+.company-app .co-day-overview select:focus-visible { outline: 2px solid var(--co-accent); outline-offset: 2px; }
+.company-app .co-day-controls label, .company-app .co-day-drill {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.company-app .co-day-drill { margin: 10px 0 4px; font-size: 13px; }
+.company-app .co-day-result-heading { margin: 4px 0 12px; line-height: 1.7; }
+.company-app .co-day-result-heading strong { color: var(--co-text); font-variant-numeric: tabular-nums; }
+.company-app .co-day-project[open] > summary .co-day-expand { font-size: 12px; }
+.company-app .co-day-project[open] > summary .co-day-expand::after { content: none; }

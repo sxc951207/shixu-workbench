@@ -1,0 +1,72 @@
+.och-card{--och-surface:var(--co-card,#fff);--och-text:var(--co-text,#182433);--och-muted:var(--co-muted,#64748b);--och-border:var(--co-border,#dce4ed);--och-blue:var(--co-accent,#206bc4);--och-tint:var(--co-soft,#f1f6fc);--och-grid:var(--co-border,#e3eaf2);min-width:0;width:100%;box-sizing:border-box;margin:20px 0;padding:24px;border:1px solid var(--och-border);border-radius:14px;background:var(--och-surface);color:var(--och-text);box-shadow:0 2px 8px #18243305;line-height:1.65}
+.och-card *{box-sizing:border-box}.och-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.och-eyebrow{display:flex;align-items:center;gap:7px;color:var(--och-blue);font-size:12px;font-weight:700}.och-card .och-heading h3{margin:7px 0 4px;font-size:20px;line-height:1.5;color:var(--och-text)}.och-card .och-heading p{margin:0;color:var(--och-muted);font-size:13px}.och-badge{display:flex;align-items:center;gap:5px;flex-shrink:0;padding:5px 9px;border:1px solid var(--och-border);border-radius:7px;background:var(--och-tint);color:var(--och-blue);font-size:11px;white-space:nowrap}
+.och-selectors{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,.8fr);gap:13px;margin:23px 0}.och-selectors label{display:grid;min-width:0;gap:7px;font-size:12px;font-weight:600;color:var(--och-muted)}.och-card .och-selectors select{width:100%;max-width:100%;min-width:0;min-height:42px;padding:9px 28px 9px 11px;border:1px solid var(--och-border);border-radius:7px;background:var(--och-surface);color:var(--och-text);font:inherit;font-size:14px;text-overflow:ellipsis}.och-card :is(select,summary,[tabindex]):focus-visible{outline:3px solid var(--och-blue);outline-offset:3px}
+.och-chart-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px}.och-card .och-chart-heading h4{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin:0;font-size:16px;color:var(--och-text)}.och-chart-heading h4 span{color:var(--och-muted);font-size:11px;font-weight:400}.och-card .och-chart-heading p{margin:4px 0 0;font-size:12px;color:var(--och-muted)}.och-kind{flex-shrink:0;color:var(--och-muted);font-size:12px}.och-card .och-definition{font-size:12px;margin:12px 0 0;color:var(--och-muted)}.och-plot{height:310px;min-width:0;width:100%;margin-top:14px}.och-plot .recharts-tooltip-wrapper{max-width:calc(100vw - 55px);font-size:12px;overflow-wrap:anywhere}.och-plot .recharts-default-tooltip{max-width:100%;white-space:normal!important}
+.och-message{display:flex;gap:13px;align-items:center;min-width:0;margin-top:20px;padding:20px;border:1px dashed var(--och-border);border-radius:10px;background:var(--och-tint);color:var(--och-muted);font-size:13px}.och-message>svg{flex-shrink:0;color:var(--och-blue)}.och-message strong{color:var(--och-text);font-size:14px}.och-card .och-message p{margin:5px 0;overflow-wrap:anywhere}.och-warning{border-style:solid;border-color:#d3a44e70;background:#e5ae3610}.och-warning>svg{color:#b87718}.och-plot-empty{min-height:170px;justify-content:center;text-align:left}.och-plot-empty p{max-width:500px}
+.och-notes{display:grid;gap:5px;padding:13px 15px;margin-top:15px;border-left:3px solid var(--och-blue);border-radius:0 7px 7px 0;background:var(--och-tint)}.och-card .och-notes p{margin:0;color:var(--och-muted);font-size:12px;overflow-wrap:anywhere}.och-details{margin-top:18px;border-top:1px solid var(--och-border);padding-top:14px}.och-details summary{width:fit-content;max-width:100%;min-height:32px;cursor:pointer;color:var(--och-blue);font-size:13px;font-weight:600}.och-table-scroll{width:100%;max-width:100%;overflow:auto;margin-top:10px;border:1px solid var(--och-border);border-radius:8px}.och-table-scroll table{width:100%;min-width:460px;border-collapse:collapse;font-size:12px;color:var(--och-text)}.och-table-scroll caption{text-align:left;padding:12px;font-size:11px;color:var(--och-muted);background:var(--och-tint)}.och-table-scroll th,.och-table-scroll td{text-align:left;padding:11px 13px;border-bottom:1px solid var(--och-border)}.och-table-scroll thead{background:var(--och-tint)}.och-table-scroll tr:last-child :is(th,td){border-bottom:0}.och-table-scroll td:nth-child(2){font-variant-numeric:tabular-nums;white-space:nowrap}.och-table-scroll td:last-child{color:var(--och-muted)}
+[data-theme="dark"] .och-card,.dark .och-card,[data-company-theme="dark"] .och-card{--och-surface:var(--co-card,#182433);--och-text:var(--co-text,#e2e8f0);--och-muted:var(--co-muted,#a6b8ce);--och-border:var(--co-border,#334459);--och-blue:var(--co-accent,#7bb7ff);--och-tint:var(--co-soft,#1d2d41);--och-grid:var(--co-border,#334459)}
+@media(max-width:800px){.och-card{padding:19px}.och-selectors{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.och-heading{flex-wrap:wrap}.och-badge{font-size:10px}.och-plot{height:280px}}
+@media(max-width:480px){.och-card{padding:15px;border-radius:10px}.och-card .och-heading h3{font-size:17px}.och-card .och-selectors select{font-size:16px;min-height:44px}.och-selectors{gap:12px 9px;margin:18px 0}.och-card .och-chart-heading h4{font-size:15px}.och-chart-heading{align-items:flex-start}.och-kind{display:none}.och-plot{height:255px;margin-left:-7px;width:calc(100% + 7px)}.och-message{padding:14px;font-size:12px}.och-notes{padding:11px}.och-card .och-notes p{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.och-card *{animation:none!important;transition:none!important}}
+
+.och-open-point{display:inline-block;min-height:32px;border:0;background:none;color:var(--och-blue);font:inherit;text-align:left;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.och-open-point:focus-visible{outline:2px solid var(--och-blue);outline-offset:2px}
+.och-drill[open]{position:fixed;inset:0;width:min(660px,calc(100% - 28px));max-height:84dvh;margin:auto;padding:20px;border:1px solid var(--och-border);border-radius:12px;background:var(--och-surface);color:var(--och-text);overflow:auto;overscroll-behavior:contain}
+.och-drill::backdrop{background:rgb(12 26 44 / 48%)}
+.och-drill header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.och-drill header h3{margin:0;font-size:18px;overflow-wrap:anywhere}
+.och-drill header p{margin:5px 0;color:var(--och-muted);font-size:13px}
+.och-drill header button{flex-shrink:0}
+.och-drill .och-drill-reason{margin:12px 0;padding:9px 12px;border-left:3px solid var(--och-blue);background:var(--och-tint);color:var(--och-text);font-size:13px}
+.och-drill .och-table-scroll table{min-width:300px}
+
+.och-card .och-zero-key {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--och-muted);
+  font-size: 12px;
+}
+.och-zero-key span {
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--och-blue);
+  border-radius: 50%;
+}
+
+/* The curve and its dots occupy separate SVG layers. Reveal both against
+   their own data bounds so leading missing dates add no empty wait. */
+@keyframes och-line-reveal {
+  from { clip-path: inset(-8px calc(100% - 4px) -8px -8px) fill-box; }
+  to   { clip-path: inset(-8px -8px -8px -8px) fill-box; }
+}
+@media screen and (prefers-reduced-motion: no-preference) {
+  .och-plot[data-reveal] :is(.recharts-area,.recharts-area-dots) {
+    animation: och-line-reveal 1350ms linear both;
+  }
+  .och-plot[data-reveal="waiting"] :is(.recharts-area,.recharts-area-dots) {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes och-bar-rise {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+@keyframes och-bar-zero-appear {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media screen and (prefers-reduced-motion: no-preference) {
+  .och-plot[data-reveal] .och-bar-growth {
+    transform-box: fill-box;
+    animation: och-bar-rise 480ms cubic-bezier(.22,.65,.3,1) both;
+  }
+  .och-plot[data-reveal] .och-bar-zero {
+    animation: och-bar-zero-appear 160ms ease-out both;
+  }
+  .och-plot[data-reveal="waiting"] :is(.och-bar-growth,.och-bar-zero) {
+    animation-play-state: paused;
+  }
+}
