@@ -28,9 +28,22 @@ function ConfigurationProjects({projects,disabled,onOpen}:{projects:ReviewConfig
  </section>;
 }
 export function SupervisorProjectSetup({companyId,revision,disabled,onOpen}:{companyId:string;revision:number;disabled:boolean;onOpen:(project:ReviewConfigurationProject)=>void}){
- const[projects,setProjects]=useState<ReviewConfigurationProject[]|null>(null),[error,setError]=useState('');
- useEffect(()=>{let live=true;setProjects(null);setError('');void api({action:'review.projects',companyId}).then(result=>{if(live)setProjects(result.projects);}).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};},[companyId,revision]);
- return error?<p className="co-error" role="alert">项目配置入口读取失败：{error}</p>:projects?<ConfigurationProjects projects={projects} disabled={disabled} onOpen={onOpen}/>:<p className="co-muted" role="status">正在读取负责确认的项目…</p>;
+ const [projects,setProjects]=useState<ReviewConfigurationProject[]|null>(null);
+ const [error,setError]=useState(''),[attempt,setAttempt]=useState(0);
+ useEffect(()=>{
+  let live=true;
+  setProjects(null);
+  setError('');
+  void api({action:'review.projects',companyId})
+   .then(result=>{if(live)setProjects(result.projects);})
+   .catch(cause=>{if(live)setError(cause instanceof Error&&cause.message?cause.message:'未能读取负责确认的项目');});
+  return()=>{live=false;};
+ },[companyId,revision,attempt]);
+ if(error)return <div className="cr-setup">
+  <p className="co-error" role="alert">项目配置入口读取失败：{error}</p>
+  <button type="button" className="co-text" disabled={disabled} onClick={()=>setAttempt(n=>n+1)}><RefreshCw size={15} aria-hidden="true"/>重新读取项目</button>
+ </div>;
+ return projects?<ConfigurationProjects projects={projects} disabled={disabled} onOpen={onOpen}/>:<p className="co-muted" role="status">正在读取负责确认的项目…</p>;
 }
 export default function CompanyReviewQueue({companyId,revision,disabled,showConfiguration,allowRoster=showConfiguration,onRevision,onPick,onConfigure}:{companyId:string;revision:number;disabled:boolean;showConfiguration:boolean;allowRoster?:boolean;onRevision?:(n:number)=>void;onPick:(item:CompanyReviewItem)=>void;onConfigure:(project:ReviewConfigurationProject)=>void}){
  const[filter,setFilter]=useState<CompanyReviewFilter>({type:'all',projectId:'',month:''}),[projects,setProjects]=useState<ReviewConfigurationProject[]|null>(null),[projectError,setProjectError]=useState(''),[items,setItems]=useState<CompanyReviewItem[]>([]),[page,setPage]=useState<CompanyReviewPage|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState('');const sequence=useRef(0),mounted=useRef(true);
