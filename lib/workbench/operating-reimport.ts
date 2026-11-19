@@ -89,7 +89,12 @@ export async function saveOperatingImportBatch(entries:OperatingImportEntry[],ac
     const record=await actions.save({...identity,version:0,rows,...(sharedAdSpend!==undefined?{sharedAdSpend}:{})});
     receipts.push({...identity,outcome:'created',status:'已保存草稿',record});continue;
    }
-   const diff=compareOperatingImport(existing,entry);
+   let diff:ReturnType<typeof compareOperatingImport>;
+   try{diff=compareOperatingImport(existing,entry);}
+   catch(e){
+    receipts.push({...identity,outcome:'errors',status:'此日需单独核对：'+(e as Error).message});
+    continue;
+   }
    if(!diff.changes.length){
     const priorWrite=previous?.outcome==='created'||previous?.outcome==='updated'||previous?.outcome==='reconciled';
     const outcome=saveUnconfirmed?'reconciled':priorWrite?previous.outcome:'unchanged';
