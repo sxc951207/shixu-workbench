@@ -1,3 +1,4 @@
+import {activeProjects} from './model.ts';
 import {supervisedProjects} from './supervised.ts';
 import {z} from 'zod';
 import {WorkbenchError} from '../../lib/workbench/domain.ts';
@@ -81,7 +82,7 @@ export async function recentCorrections(tx:CompanyTx,actor:Actor,companyId:unkno
  const {c,member}=await loadCompany(tx,actor,companyId);
  const supervised=scope==='supervised'?supervisedProjects(member):undefined;
  if(!supervised&&!actor.owner&&!member?.roles.includes('leader'))throw new WorkbenchError('没有查看已确认更正动态的权限',403);
- const projects=new Map(c.projects.map(p=>[p.id,p]));
+ const projects=new Map(activeProjects(c).map(p=>[p.id,p]));
  const items=(await readIndex(tx,c.id)).filter(item=>{
   const project=projects.get(item.projectId);if(!project||supervised&&!supervised(project))return false;
   // Report summary permits this company's leader to view a project with a confirmed report.

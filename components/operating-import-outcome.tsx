@@ -26,18 +26,27 @@ export default function OperatingImportOutcome({receipts,onView,onSubmit}:{recei
  const days=receipts.filter(item=>item.sheet!=='targets'),targets=receipts.filter(item=>item.sheet==='targets');
  const counts=operatingImportCounts(receipts);
  const drafts=receipts.filter(item=>!item.submitIssue&&['draft','returned'].includes(importReceiptStage(item)));
+ const needsReview=(item:Receipt)=>importReceiptStage(item)==='unresolved'||!!item.submitIssue;
+ const review=receipts.filter(needsReview);
+ const waiting=receipts.filter(item=>importReceiptStage(item)==='submitted').length;
+ const approved=receipts.filter(item=>importReceiptStage(item)==='approved').length;
+ const unit=!targets.length&&new Set(days.map(item=>item.date)).size===days.length?'天':'条';
+ const headline=review.length?review.length+' '+unit+'需核对':drafts.length?drafts.length+' '+unit+'草稿待提交':receipts.length&&waiting+approved===receipts.length?'本次无需再提交':'暂无导入结果';
  return <section className="op-import-outcome" aria-label="业务日期导入回执">
-  <h4>{days.length?'本次识别了 '+new Set(days.map(item=>item.date)).size+' 个业务日':'本次月目标导入结果'}</h4>
-  <p role="status" aria-label="导入结果统计">新增 {counts.created} · 更新 {counts.updated} · 一致 {counts.unchanged} {counts.reconciled>0&&' · 重试核实 '+counts.reconciled} · 异常 {counts.errors}{counts.review>0&&' · 待核对 '+counts.review}{counts.skipped>0&&' · 跳过 '+counts.skipped}{counts.pending>0&&' · 未处理 '+counts.pending}</p>
+  <div role="status"><h4>{headline}</h4>
+   {(waiting>0||approved>0)&&<p>{[waiting&&waiting+' '+unit+'等主管确认',approved&&approved+' '+unit+'已确认'].filter(Boolean).join('，')}。</p>}
+   {!!review.length&&<p>请查看下方记录中的原因。</p>}
+  </div>
+  {!!drafts.length&&<button type="button" className="co-primary op-receipt-submit" onClick={()=>onSubmit(drafts)}>提交这 {drafts.length} {unit}草稿</button>}
   {stages.map(([stage,label])=>{
    const group=days.filter(item=>importReceiptStage(item)===stage);
    if(!group.length)return null;
-   return <details key={stage} className="op-import-stage" open={stage==='unresolved'||undefined}>
-    <summary><strong>{group.length} 天{label}</strong> · 查看这 {group.length} 天</summary>
+   return <details key={stage} className="op-import-stage" open={group.some(needsReview)||undefined}>
+    <summary><strong>{group.length} {unit}{label}</strong> · 查看这 {group.length} {unit}</summary>
     <ul>{group.map(item=><ReceiptRow key={item.sheet+item.date} item={item} onView={onView}/>)}</ul>
    </details>;
   })}
   {targets.length>0&&<div><strong>月目标</strong><ul>{targets.map(item=><li key={item.date}>{stages.find(([stage])=>stage===importReceiptStage(item))?.[1]}<ul><ReceiptRow item={item} onView={onView}/></ul></li>)}</ul></div>}
-  {!!drafts.length&&<button type="button" className="op-button" onClick={()=>onSubmit(drafts)}>勾选本次草稿并提交（{drafts.length}）</button>}
+  <details className="op-receipt-counts"><summary>导入统计明细</summary><p aria-label="导入结果统计">新增 {counts.created} · 更新 {counts.updated} · 一致 {counts.unchanged}{counts.reconciled>0&&' · 重试核实 '+counts.reconciled} · 异常 {counts.errors}{counts.review>0&&' · 待核对 '+counts.review}{counts.skipped>0&&' · 跳过 '+counts.skipped}{counts.pending>0&&' · 未处理 '+counts.pending}</p></details>
  </section>;
 }

@@ -9,6 +9,7 @@ import {inferOperatingTemplate} from '../lib/workbench/operating-template-infere
 import OperatingSpreadsheetImport from './operating-spreadsheet-import';
 import {assertOperatingYuanUnit,operatingFieldDefinition} from '../lib/workbench/operating-field-dictionary';
 
+import type {UploadCandidate} from './operating-project-upload';
 export type OperatingSetup=Pick<OperatingConfig,'stores'|'templates'|'builtinSheets'|'dimensionLabel'>;
 const builtin:OperatingBuiltinSheet[]=['revenue','targets','meituan','douyin','meituan-stores','douyin-stores'];
 const builtinNames:Record<OperatingBuiltinSheet,string>={revenue:'门店总业绩',targets:'月目标',meituan:'美团日录',douyin:'抖音日录','meituan-stores':'美团累计明细','douyin-stores':'抖音累计明细'};
@@ -16,7 +17,7 @@ const defaultNames=['示例一店','示例二店','示例三店'];
 const defaultStores=()=>defaultNames.map((name,index)=>({id:'s'+String(index+1).padStart(3,'0'),name}));
 const newId=()=>'tpl_custom_'+crypto.randomUUID().replace(/-/g,'').slice(0,12);
 
-export default function OperatingTemplateLibrary({focusStores,projectId,projectName,config,busy,own=false,pending=false,activeConfig=config,onDirty,onSave}:{focusStores?:boolean;projectId:string;projectName:string;config:OperatingConfig|null;busy:boolean;own?:boolean;pending?:boolean;activeConfig?:OperatingConfig|null;onDirty:()=>void;onSave:(value:OperatingSetup)=>void}){
+export default function OperatingTemplateLibrary({uploadCandidate,onAdoptUpload,focusStores,projectId,projectName,config,busy,own=false,pending=false,activeConfig=config,onDirty,onSave}:{uploadCandidate?:UploadCandidate;onAdoptUpload?:(id:string)=>void;focusStores?:boolean;projectId:string;projectName:string;config:OperatingConfig|null;busy:boolean;own?:boolean;pending?:boolean;activeConfig?:OperatingConfig|null;onDirty:()=>void;onSave:(value:OperatingSetup)=>void}){
  const [sheets,setSheets]=useState<OperatingBuiltinSheet[]>(own?[]:config?(config.builtinSheets||builtin):[]),[templates,setTemplates]=useState<OperatingTemplate[]>((config?.templates||[]).filter(t=>!own||t.writer==='project-owner').map(t=>({...t,fields:t.fields.map(f=>({...f})),metrics:t.metrics.map(m=>({...m}))}))),[stores,setStores]=useState<OperatingStore[]>(config?.stores.map(s=>({...s}))||[]),[dimensionLabel,setDimensionLabel]=useState(config?.dimensionLabel||'门店'),[editing,setEditing]=useState<string|null>(null),[error,setError]=useState(''),[importNote,setImportNote]=useState('');
  const presets=operatingTemplatePresets().map(t=>({...t,...(own?{id:'tpl_self_'+t.id.slice(4)}:{}),writer:'project-owner' as const})),existingIds=new Set(activeConfig?.templates?.map(t=>t.id)||[]),selected=templates.find(t=>t.id===editing),locked=!!selected&&existingIds.has(selected.id),catalog=operatingFieldCatalog();
  const baseline=activeConfig?.templates?.find(t=>t.id===selected?.id);
@@ -40,7 +41,7 @@ export default function OperatingTemplateLibrary({focusStores,projectId,projectN
   const template:OperatingTemplate={id:newId(),name:(candidateName||inferred.suggestedName||source.replace(/\.(xlsx|csv|tsv|txt)$/i,'')||'表格生成的汇报').slice(0,60),description:'',dimension:result.dimension?'store':'total',writer:'project-owner',active:true,fields:result.fields.map(f=>({...f})),metrics:inferred.metrics.map(m=>({...m}))};
   const {existing:same,nameConflict}=matchImportedOperatingTemplate(templates,template);
   if(same){
-   setEditing(same.id);setError('');setImportNote('已有同名且字段、维度和公式一致的模板“'+same.name+'”，已定位到原模板。'+(same.active?'无需重复创建。':'当前已停用，可在使用状态中核对是否启用。'));return;
+   setEditing(same.id);setError('');setImportNote('已有同名且字段、维度和公式一致的模板“'+same.name+'”，已定位到原模板。'+(same.active?'无需重复创建。':'当前已停用，可在使用状态中核对是否启用。'));return same.id;
   }
   if(nameConflict)throw Error('项目已有同名模板“'+template.name+'”，字段、维度或公式与本工作表不同。请核对，或为这张工作表填写另一候选模板名称。');
   if(templates.length>=12)throw Error('每个项目最多12个自定义模板');
@@ -54,8 +55,14 @@ export default function OperatingTemplateLibrary({focusStores,projectId,projectN
    if(!activeConfig||!own)setDimensionLabel(label);
    rowNote=extra.length?'已加入 '+extra.length+' 个'+label+'名称，请核对。':'已与本项目分行名称匹配。';
   }
-  setTemplates([...templates,template]);setEditing(template.id);changed();setImportNote('已加入“'+template.name+'”：'+result.fields.length+' 个填报字段，'+template.metrics.length+' 个计算指标。'+rowNote+inferred.notes.join(' ')+' 请核对释义、必填项和公式后提交。');
+  setTemplates([...templates,template]);setEditing(template.id);changed();setImportNote('已加入“'+template.name+'”：'+result.fields.length+' 个填报字段，'+template.metrics.length+' 个计算指标。'+rowNote+inferred.notes.join(' ')+' 请核对释义、必填项和公式后提交。');return template.id;
  }
+ const appliedUpload=React.useRef<UploadCandidate|null>(null);
+ React.useEffect(()=>{
+  if(!uploadCandidate||appliedUpload.current===uploadCandidate)return;
+  appliedUpload.current=uploadCandidate;
+  try{const id=adoptTable(uploadCandidate.result,uploadCandidate.source.tab,uploadCandidate.name);if(id)onAdoptUpload?.(id);}catch(e){setError((e as Error).message);}
+ },[uploadCandidate]);
  function chooseField(key:string,checked:boolean){if(!selected||fieldLocked(key))return;try{const next=selectTemplateFields(selected,checked?[...selected.fields.map(f=>f.key),key]:selected.fields.filter(f=>f.key!==key).map(f=>f.key));const removed=selected.metrics.length-next.metrics.length;patch(next);if(removed)setImportNote('已移除依赖这个字段的 '+removed+' 个计算指标；其他字段与数据保留。');}catch(e){setError((e as Error).message);}}
  function patchField(index:number,update:Partial<OperatingField>){if(!selected||fieldLocked(selected.fields[index].key))return;patch({fields:selected.fields.map((f,i)=>i===index?{...f,...update}:f)});}
  function addField(){if(!selected||!canExtend||selected.fields.length>=30)return;let index=selected.fields.length+1;while(selected.fields.some(f=>f.key==='field'+index)||selected.metrics.some(m=>m.key==='field'+index))index++;patch({fields:[...selected.fields,{key:'field'+index,label:'新字段'+index,kind:'count',required:true}]});}

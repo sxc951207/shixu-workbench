@@ -1,3 +1,4 @@
+import {activeProjects} from './model.ts';
 import {supervisedProjects} from './supervised.ts';
 import {operatingColumnRules} from './operating-column-rules.ts';
 import {operatingStoreAliases} from './operating-alias.ts';
@@ -36,7 +37,7 @@ export function operatingReviewerLogin(c:Company,p:Project,r:OperatingRecord,vie
 function currentProjection(c:Company,p:Project,r:OperatingRecord,viewer:string):OperatingRecord{return r.status==='submitted'?{...r,reviewerLogin:operatingReviewerLogin(c,p,r,viewer)}:r;}
 function leaderProjection(r:OperatingRecord):OperatingRecord|null{return r.published?{...r.published,published:structuredClone(r.published)}:null;}
 function snapshotConfig(projectId:string,records:OperatingRecord[]):OperatingConfig{const stores=new Map<string,OperatingStore>(),templates=new Map<string,OperatingTemplate>(),enabled=new Set<string>();for(const r of records){if(r.template)templates.set(r.template.id,r.template);else enabled.add(r.sheet);for(const row of r.rows)if(row.storeId!=='all')stores.set(row.storeId,{id:row.storeId,name:row.storeName});}return{projectId,stores:[...stores.values()],templates:[...templates.values()],builtinSheets:[...enabled]as any,dimensionLabel:'明细项'};}
-async function readIndex(tx:CompanyTx,c:Company,month:string){
+export async function readIndex(tx:CompanyTx,c:Company,month:string){
  const meta=c.operatingMonths?.[month],index=await tx.get<OperatingIndex>(operatingIndexKey(c.id,month));
  if(!meta&&!index)return {revision:0,versions:0,items:[]} as OperatingIndex;
  if(!meta||!index||!Array.isArray(index.items)||index.items.length!==meta.count||index.items.length>2000||index.revision!==meta.revision||index.versions!==meta.versions||index.items.reduce((n,h)=>n+h.version,0)!==index.versions||new Set(index.items.map(h=>h.id)).size!==index.items.length)fail('经营数据目录不完整，请联系管理员',409);
@@ -70,7 +71,7 @@ export async function executeOperating(tx:CompanyTx,actor:Actor,b:any,clock=new 
   const previousMonth=addDays(month+'-01',-1).slice(0,7);
   const result:OperatingHomeResult={since:previousMonth+'-01',day,item:null};
   if(!member?.roles.includes('employee')||actor.owner)return result;
-  const projects=c.projects.filter(p=>platformContributor(member,p)&&configAt(c,p.id));
+  const projects=activeProjects(c).filter(p=>platformContributor(member,p)&&configAt(c,p.id));
   if(!projects.length)return result;
   const headsBySheet=new Map<string,OperatingHead[]>();
   for(const period of [previousMonth,month]){
@@ -114,7 +115,7 @@ export async function executeOperating(tx:CompanyTx,actor:Actor,b:any,clock=new 
  if(b.action==='ops.options'){
   const supervised=b.scope==='supervised'?supervisedProjects(member):null;
   if(b.scope!==undefined&&!supervised&&!['working','summary'].includes(b.scope))fail('经营数据口径无效');
-  const projects=[];for(const h of c.projects){const current=actor.owner||platformContributor(member,h)||!!member&&member.roles.includes('supervisor')&&h.reviewerLogin===uid||!!member&&h.ownerLogin===uid&&member.roles.some(r=>r==='employee'||r==='supervisor');
+  const projects=[];for(const h of activeProjects(c)){const current=actor.owner||platformContributor(member,h)||!!member&&member.roles.includes('supervisor')&&h.reviewerLogin===uid||!!member&&h.ownerLogin===uid&&member.roles.some(r=>r==='employee'||r==='supervisor');
    if(supervised||b.scope==='summary'){const config=configAt(c,h.id);if((supervised?supervised(h):current||member?.roles.includes('leader'))&&(h.publishedVersion||config?.confirmedProjectName)){const p=await projectAt(tx,c,h.id),name=p.published?.name||config?.confirmedProjectName;if(name)projects.push({id:p.id,name,enabled:!!config});}continue;}
    if(current)projects.push({id:h.id,name:h.name,enabled:!!configAt(c,h.id)});
    else if(member?.roles.includes('leader')&&configAt(c,h.id)&&(h.publishedVersion||configAt(c,h.id)?.confirmedProjectName)){const p=await projectAt(tx,c,h.id);projects.push({id:p.id,name:p.published?.name||configAt(c,p.id)!.confirmedProjectName!,enabled:true});}}

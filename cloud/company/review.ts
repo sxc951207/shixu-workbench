@@ -1,10 +1,11 @@
+import {activeProjects} from './model.ts';
 import type{Actor,Company,Member,Project,ProjectHead,PeriodReport,ReportHead,ReportIndex}from'./model.ts';
 import type{CompanyTx}from'./store.ts';import type{OperatingHead,OperatingIndex,OperatingRecord}from'./operating-model.ts';
 import type{CompanyReviewItem,CompanyReviewCursor,CompanyReviewPage,CompanyReviewType}from'../../lib/workbench/company-review.ts';
 import{WorkbenchError,todayShanghai}from'../../lib/workbench/domain.ts';import{digest,loadCompany,projectAt,canConfirmProgress}from'./core.ts';import{companyAbility,projectSubject}from'./policy.ts';import{operatingHead,operatingId,operatingIndexKey,operatingReviewerLogin}from'./operating.ts';import{reportIndexKey,canReviewDaily}from'./reports.ts';
 const MAX_CANDIDATES=20,MAX_INDEXES=4;
 function fail(message:string,status=400):never{throw new WorkbenchError(message,status);}
-function reviewerProjects(actor:Actor,member:Member|null|undefined,c:Company){const supervisor=member?.roles.includes('supervisor'),leader=member?.roles.includes('leader');const projects=c.projects.filter(p=>actor.owner||supervisor&&p.reviewerLogin===member!.login||leader&&p.progressLeaderLogin===member!.login);if(!actor.owner&&!supervisor&&!projects.length)fail('没有该项目待确认权限',403);return projects;}
+function reviewerProjects(actor:Actor,member:Member|null|undefined,c:Company){const supervisor=member?.roles.includes('supervisor'),leader=member?.roles.includes('leader');const projects=activeProjects(c).filter(p=>actor.owner||supervisor&&p.reviewerLogin===member!.login||leader&&p.progressLeaderLogin===member!.login);if(!actor.owner&&!supervisor&&!projects.length)fail('没有该项目待确认权限',403);return projects;}
 function canReview(actor:Actor,c:Company,p:ProjectHead,status:string,submittedBy:string,publishedVersion=0){const uid=actor.owner?'owner':actor.login!;return status==='submitted'&&submittedBy!==uid&&companyAbility(actor,c).can('review',projectSubject({...p,companyId:c.id,status,submittedBy,published:publishedVersion?{version:publishedVersion}:null}as Project));}
 function month(value:unknown){if(value===undefined||value==='')return'';if(typeof value!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(value)||value<'1970-01'||value>'2100-12')fail('待确认月份无效');return value;}
 function recordDate(value:string|null,fallback:string){const stamp=value||fallback,date=new Date(stamp);if(!Number.isFinite(date.getTime()))fail('待确认记录时间无法核对');return todayShanghai(date);}

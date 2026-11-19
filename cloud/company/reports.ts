@@ -1,3 +1,4 @@
+import {activeProjects} from './model.ts';
 import {dailyRosterAction} from './daily-roster.ts';
 import {supervisedProjects} from './supervised.ts';
 import {recordConfirmedCorrection} from './corrections.ts';
@@ -28,7 +29,7 @@ export async function executeReport(tx:CompanyTx,actor:Actor,b:any,clock=new Dat
  const canPrepare=(p:Project|ProjectHead)=>ability.can('edit',scoped(p,c,{status:'draft',submittedBy:'',publishedVersion:0}));
  const dailyAssigned=(p:ProjectHead)=>!!actor.owner||!!member?.roles.some(role=>role==='employee'||role==='supervisor')&&(p.ownerLogin===uid||p.participants.includes(uid)||p.reviewerLogin===uid&&member.roles.includes('supervisor'));
  const dailySubject=(p:ProjectHead,h:ReportHead)=>scoped({...p,ownerLogin:dailyAssigned(p)&&h.authorLogin===uid?uid:'',participants:[]},c,h);
- if(b.action==='report.projects')return{projects:c.projects.filter(b.kind==='daily'?dailyAssigned:canPrepare).map(p=>({id:p.id,name:p.name,version:p.version,ownerLogin:p.ownerLogin,reviewerLogin:p.reviewerLogin}))};
+ if(b.action==='report.projects')return{projects:activeProjects(c).filter(b.kind==='daily'?dailyAssigned:canPrepare).map(p=>({id:p.id,name:p.name,version:p.version,ownerLogin:p.ownerLogin,reviewerLogin:p.reviewerLogin}))};
  if(b.action==='report.list'){
   if(b.revision!==undefined&&b.revision!==c.revision)fail('公司内容已发生变化，请刷新后重试',409);
   const period=reportPeriod(b.kind,b.periodDate),supervised=b.scope==='supervised'?supervisedProjects(member):undefined,scope=supervised?'summary':b.scope||'mine';
@@ -48,7 +49,7 @@ export async function executeReport(tx:CompanyTx,actor:Actor,b:any,clock=new Dat
    headers=index.items.filter(h=>{
     if(scope==='review'&&b.reviewId&&b.reviewId!==h.id)return false;
     if(h.kind!==period.kind||h.start!==period.start||b.projectId&&h.projectId!==b.projectId)return false;
-    const project=c.projects.find(x=>x.id===h.projectId);
+    const project=activeProjects(c).find(x=>x.id===h.projectId);
     if(!project)return false;
     const object=h.kind==='daily'?dailySubject(project,h):scoped(project,c,h);
     if(scope==='review'&&h.kind==='daily')return canReviewDaily(actor,c,project,h);
@@ -68,7 +69,7 @@ export async function executeReport(tx:CompanyTx,actor:Actor,b:any,clock=new Dat
   const writing=period.kind==='daily'&&(scope==='mine'||scope==='manage');
   const myDailyStatuses=writing?Object.fromEntries(headers.filter(h=>h.authorLogin===uid).map(h=>[h.projectId,h.status])):undefined;
   const assignment=scope==='mine'&&period.kind==='daily'?{assignedProjectIds:(c.dailySchedules||[]).filter(s=>
-   s.login===uid&&s.month===period.start.slice(0,7)&&s.days.includes(Number(period.start.slice(8)))&&(!b.projectId||s.projectId===b.projectId)&&c.projects.some(p=>p.id===s.projectId&&dailyAssigned(p))
+   s.login===uid&&s.month===period.start.slice(0,7)&&s.days.includes(Number(period.start.slice(8)))&&(!b.projectId||s.projectId===b.projectId)&&activeProjects(c).some(p=>p.id===s.projectId&&dailyAssigned(p))
   ).map(s=>s.projectId)}:{};
   return{period,reports,total:headers.length,page,companyRevision:c.revision,...(writing?{myDailyStatuses}:{}),...assignment};
  }

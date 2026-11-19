@@ -1,3 +1,4 @@
+import {activeProjects} from './model.ts';
 import {WorkbenchError} from '../../lib/workbench/domain.ts';
 import {reportPeriod} from '../../lib/workbench/report-period.ts';
 import type {DailyRoster,DailyRosterRow} from '../../lib/workbench/daily-roster.ts';
@@ -11,7 +12,7 @@ import type {CompanyTx} from './store.ts';
 export async function dailyRosterAction(tx:CompanyTx,actor:Actor,c:Company,member:Member|null|undefined,b:any){
  if(!actor.owner&&!member?.roles.includes('supervisor'))throw new WorkbenchError('没有主管日报名单权限',403);
  const {start:date}=reportPeriod('daily',b.periodDate),month=date.slice(0,7),day=Number(date.slice(8));
- const managed=c.projects.filter(p=>actor.owner||p.reviewerLogin===member?.login);
+ const managed=activeProjects(c).filter(p=>actor.owner||p.reviewerLogin===member?.login);
  const projects=managed.map(p=>({id:p.id,name:p.name,employees:c.members.filter(m=>m.active&&m.roles.includes('employee')&&(m.login===p.ownerLogin||p.participants.includes(m.login))).map(({login,name})=>({login,name}))}));
  const schedules=c.dailySchedules||[];
  if(b.action==='report.dailySchedule'){

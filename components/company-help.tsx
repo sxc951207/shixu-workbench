@@ -12,6 +12,11 @@ type FAQ={question:string;answer:string;keywords?:string};
 const roleNames:Record<GuideRole,string>={reporter:'填报人',supervisor:'确认主管',leader:'领导',admin:'管理员'};
 const allRoles:GuideRole[]=['reporter','supervisor','leader','admin'];
 const guides:Guide[]=[
+ {id:'project-upload',title:'手里有原表，怎样开始填报？',intro:'在「数据报表」选经营项目，点「上传报表」。',roles:['reporter','supervisor','admin'],icon:FileSpreadsheet,steps:[
+  '选择 Excel、粘贴截图或拖入文件。一个工作簿有几张表时，先核对所选工作表和表头。',
+  '匹配清楚会打开对应表的预览。有两种可能时，按原表的业务含义选择。内容相同的金额可能来自不同平台，也可能分别表示当天和期间累计。',
+  '首次出现的表可以建立新模板。员工提交指标方案后，等主管确认，再回到当前浏览器标签页，从「上传报表」继续填报已保留的原表。',
+  '核对业务日期、门店和金额后保存草稿，再提交确认。'],keywords:'上传 截图 自动识别 匹配 自定义模板 原表 Excel',action:{label:'打开数据报表',tab:'operating'}},
  {id:'first-report',title:'第一次用，先走通一份样例',intro:'先认清项目、日期和确认人，再开始正式填报。',roles:allRoles,icon:BookOpen,steps:[
   '先打开只读演示或试用数据模板，熟悉界面；真实协作前，建议在测试公司用一个项目走通流程。',
   '管理员添加成员并分配项目负责人、确认主管和参与人。项目负责人或参与员工从“填报指标”进入设置，用现有表格或预设起草方案。',

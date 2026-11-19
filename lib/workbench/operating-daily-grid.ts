@@ -15,17 +15,13 @@ const compact=(value:string)=>value.replace(/\s+/g,'');
 const plainNumber=(s:string)=>/^\d+(?:\.\d+)?$/.test(s);
 const subtotal=(s:string)=>/^(?:月度|合计|总计|小计|第[一二三四五六七八九十\d]+周(?:合计)?)$/.test(compact(s));
 
-/** Re-read a ruled daily table using the source cells, including its printed date column. */
-export async function readDailyGrid(file:File,rows:string[][],bounds:OcrBounds,reference:string,sheet:OperatingSheet,template:OperatingTemplate|undefined,stores:{id:string;name:string}[]|undefined,live:()=>boolean,register:(job:ReturnType<typeof startOcrJob>)=>void){
- const dateHeading=(s:string)=>/^(?:(?:业务|统计|数据|发生|成交|填报)?日期|date)$/i.test(compact(s));
- let header=rows.findIndex((r,i)=>i>=bounds.prefix&&r.some(dateHeading));
- const last=bounds.prefix+bounds.y.length-2;
- if(bounds.x.length<3||last<bounds.prefix+1||bounds.y.length>72)return;
+type Active = () => boolean;
+type Register = (job:ReturnType<typeof startOcrJob>) => void;
+async function gridCellReader(file:File,bounds:OcrBounds,live:Active,register:Register){
  const bitmap=await createImageBitmap(file);
- try{
   const sx=bitmap.width/bounds.width,sy=bitmap.height/bounds.height,width=bounds.x.length-1;
   const canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;
-  const ctx=canvas.getContext('2d',{willReadFrequently:true});if(!ctx)throw Error('无法读取截图');ctx.drawImage(bitmap,0,0);
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});try{if(!ctx)throw Error('无法读取截图');ctx.drawImage(bitmap,0,0);}finally{bitmap.close();}
   async function crop(row:number,column:number,left:number,top:number,right:number,bottom:number,zoom=3):Promise<Cell>{
    const x=Math.max(0,Math.round(left)+2),y=Math.max(0,Math.round(top)+2);
    const w=Math.max(1,Math.round(right)-x-1),h=Math.max(1,Math.round(bottom)-y-1);
@@ -45,6 +41,140 @@ export async function readDailyGrid(file:File,rows:string[][],bounds:OcrBounds,r
    const job=startOcrJob(cells[0].bytes,{assetBase:base,remainingCells:cells.slice(1).map(c=>c.bytes),chineseCells:chinese,multilineCells:multiline,digitsOnly:!chinese&&!unrestricted,workerFactory:()=>new Worker(base+'/worker.min.js')});register(job);
    return (await job.promise).cellTexts||[];
   }
+  return {cell,crop,read,sx,sy,width,ctx,sourceWidth:canvas.width};
+}
+
+/** Recheck visible ink in missing numeric cells of unfamiliar dated tables. */
+export async function recoverMissingDailyCells(file:File,rows:string[][],bounds:OcrBounds,live:Active,register:Register){
+ const reader=await gridCellReader(file,bounds,live,register);
+ const out=rows.map(row=>[...row]),cells:Cell[]=[],headCells:Cell[]=[];
+ const axisOf=(row:string[])=>row.findIndex(v=>/^(?:(?:业务|统计|数据|发生|成交|填报)?日期|date)$/i.test(compact(v)));
+ const limit=Math.min(rows.length,bounds.prefix+bounds.y.length-1);
+ for(let r=bounds.prefix;r<limit;r++){
+  if(axisOf(out[r])<0)continue;
+  for(let c=0;c<reader.width&&headCells.length<80;c++)if(!out[r][c])headCells.push(await reader.cell(r,c,2));
+ }
+ const headings=await reader.read(headCells,true);
+ for(const [i,{row,column}] of headCells.entries()){
+  const value=(headings[i]||'').replace(/\s/g,'');
+  if(/[\u3400-\u9fff]{2}/.test(value))out[row][column]=value;
+ }
+ if(!live())return out;
+ // Re-read printed dates even for an unfamiliar project. Do not interpolate missing days.
+ const dateCells:Cell[]=[];
+ const looksDate=(v:string)=>{try{operatingImportDate(compact(v),'2000-01-01');return true;}catch{return false;}};
+ let axis=-1;
+ for(let r=bounds.prefix;r<limit;r++){
+  const col=axisOf(out[r]);if(col>=0){axis=col;continue;}
+  if(axis<0||looksDate(out[r][axis]||'')||subtotal(out[r][axis]||''))continue;
+  if(out[r].some((v,c)=>c!==axis&&plainNumber(compact(v)))&&dateCells.length<100)dateCells.push(await reader.cell(r,axis));
+ }
+ const dateTexts=await reader.read(dateCells,true);
+ if(!live())return out;
+ for(const [i,{row,column}] of dateCells.entries()){
+  const text=compact(dateTexts[i]||'');
+  if(looksDate(text)||subtotal(text))out[row][column]=text;
+  else if(/^\s*\d{4,7}\s*$/.test(out[row][column]))out[row][column]='日期待核对';
+ }
+ let date=-1,labels:string[]=[];
+ for(let r=bounds.prefix;r<limit;r++){
+  const row=out[r];
+  const axis=axisOf(row);
+  if(axis>=0){labels=row;date=axis;continue;}
+  if(date<0||!/^\d{1,4}[-/.年月]\d{1,2}/.test(compact(row[date]||'')))continue;
+  for(let c=0;c<Math.min(labels.length,reader.width);c++){
+   if(c===date||row[c]||!labels[c]||isIdentifierColumn(labels[c])||!/数|金额|消耗|花费|收入|成本|单价|销量|点击|曝光|业绩|率|ROI/i.test(labels[c]))continue;
+   // Inspect the cell interior so ruling lines cannot turn a genuine blank into a zero.
+   const left=Math.ceil(bounds.x[c]*reader.sx)+4,top=Math.ceil(bounds.y[r-bounds.prefix]*reader.sy)+4;
+   const w=Math.floor(bounds.x[c+1]*reader.sx)-left-4,h=Math.floor(bounds.y[r-bounds.prefix+1]*reader.sy)-top-4;
+   if(w<4||h<4)continue;
+   const px=reader.ctx.getImageData(left,top,w,h).data;
+   let ink=0,x0=w,y0=h,x1=0,y1=0;
+   for(let i=0;i<px.length;i+=4){
+    if(Math.abs(px[i]-px[0])+Math.abs(px[i+1]-px[1])+Math.abs(px[i+2]-px[2])<=240)continue;
+    const x=i/4%w,y=Math.floor(i/4/w);
+    ink++;x0=Math.min(x,x0);x1=Math.max(x,x1);y0=Math.min(y,y0);y1=Math.max(y,y1);
+   }
+   if(ink<4)continue;
+   out[r][c]='待核对';
+   if(live()&&cells.length<160)cells.push(await reader.crop(r,c,left+Math.max(-2,x0-6),top+Math.max(-2,y0-6),
+    left+Math.min(w+1,x1+6),top+Math.min(h+1,y1+6),3));
+  }
+ }
+ const texts=await reader.read(cells,false,true);
+ for(const [i,cell] of cells.entries()){
+  const value=(texts[i]||'').trim();
+  if(/^[-+]?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?%?$/.test(value))out[cell.row][cell.column]=value;
+ }
+ return out;
+}
+
+export async function readTemplateHeader(file:File,rows:string[][],bounds:OcrBounds,header:number,live:Active,register:Register){
+ if(header<bounds.prefix||header>=bounds.prefix+bounds.y.length-1||bounds.x.length<3||bounds.x.length>45||rows.length<3)return;
+ const {cell,crop,read,width,sourceWidth,sy,ctx}=await gridCellReader(file,bounds,live,register);
+ const cells:Cell[]=[];
+ for(let column=0;column<width;column++)cells.push(await cell(header,column,2));
+ // A full-width title may sit above the table grid or in its first merged row.
+ const title=rows.findIndex((r,i)=>i<header&&r.filter(Boolean).length===1&&r.some(v=>v.length>=4));
+ if(title>=0){
+  const top=title<bounds.prefix?0:bounds.y[title-bounds.prefix]*sy;
+  const bottom=bounds.y[Math.max(0,title-bounds.prefix+1)]*sy;
+  if(bottom-top>=8){
+   // Avoid window chrome and the thin white gutter above a colored title.
+   const y=Math.floor((top+bottom)/2), edge=Math.floor(sourceWidth*.06);
+   const color=ctx.getImageData(edge,y,1,1).data;
+   const column=ctx.getImageData(edge,Math.floor(top),1,Math.ceil(bottom)-Math.floor(top)).data;
+   const same=(at:number)=>Math.abs(color[0]-column[at*4])+Math.abs(color[1]-column[at*4+1])+Math.abs(color[2]-column[at*4+2])<48;
+   let a=y-Math.floor(top),b=a;while(a>0&&same(a-1))a--;while(b+1<column.length/4&&same(b+1))b++;
+   if(b-a>=8)cells.push(await crop(title,-1,0,Math.floor(top)+a,sourceWidth,Math.floor(top)+b+1));
+  }
+ }
+ const texts=await read(cells,true);if(!live())return;
+ const out=rows.map(row=>[...row]);
+ for(const [i,{row,column}] of cells.entries()){
+  const text=(texts[i]||'').trim().replace(/\s*([\u3400-\u9fff])\s*/g,'$1');
+  if(!text)continue;
+  if(column<0)out[row][0]=text;
+  else if(/[\u3400-\u9fff]/.test(text)||!/[\u3400-\u9fff]/.test(out[row][column]||''))out[row][column]=text;
+ }
+ const labels=out[header];
+ const privateTraffic=labels.some(v=>v.includes('私信开口'))&&labels.some(v=>v.includes('门店访问'));
+ const exposure=labels.some(v=>v.includes('自然曝光'))&&labels.some(v=>/cpc.*曝光|付费曝光/i.test(v));
+ if(privateTraffic||exposure){
+  const sheet=privateTraffic?'douyin':'meituan',fields=operatingFields(sheet);
+  const match=(v:string)=>platformImportField(compact(v).replace(/[|/]+$/,''),sheet,fields);
+  const retry:Cell[]=[];
+  for(let c=0;c<width;c++){
+   const found=match(labels[c]);
+   if(found)labels[c]=found.label;
+   else if(privateTraffic&&/私信/.test(labels[c]))retry.push(await cell(header,c,4));
+  }
+  if(retry.length){
+   const alternate=await read(retry,true);if(!live())return;
+   const multiline=[];
+   for(const {column} of retry)multiline.push(await cell(header,column,3));
+   const third=await read(multiline,true,false,true);if(!live())return;
+   for(const [i,{column}] of retry.entries()){
+    const readings=[labels[column],compact(alternate[i]||''),compact(third[i]||'')];
+    const leadHeading=/^私信线[索泰率]人(?:数)?$/;
+    const matches=new Set(readings.map(v=>match(v)?.label).filter(Boolean));
+    if(matches.size===1)labels[column]=[...matches][0]!;
+    else if(matches.size===0&&readings.filter(v=>leadHeading.test(v)).length>=2)
+     labels[column]='私信留资人数';
+   }
+  }
+  if(privateTraffic&&title>=0)out[title][0]=out[title][0].replace(/[(（]拌音[）)]/,'（抖音）');
+ }
+ return out;
+}
+
+/** Re-read a ruled daily table using the source cells, including its printed date column. */
+export async function readDailyGrid(file:File,rows:string[][],bounds:OcrBounds,reference:string,sheet:OperatingSheet,template:OperatingTemplate|undefined,stores:{id:string;name:string}[]|undefined,live:()=>boolean,register:(job:ReturnType<typeof startOcrJob>)=>void){
+ const dateHeading=(s:string)=>/^(?:(?:业务|统计|数据|发生|成交|填报)?日期|date)$/i.test(compact(s));
+ let header=rows.findIndex((r,i)=>i>=bounds.prefix&&r.some(dateHeading));
+ const last=bounds.prefix+bounds.y.length-2;
+ if(bounds.x.length<3||last<bounds.prefix+1||bounds.y.length>72)return;
+ const {cell,crop,read,sx,sy,width,ctx,sourceWidth}=await gridCellReader(file,bounds,live,register);
   let dateColumn=header<0?-1:rows[header].findIndex(dateHeading);
   if(header<0){
    // Whole-image OCR can miss an entire header cell even in a clearly ruled table.
@@ -57,7 +187,7 @@ export async function readDailyGrid(file:File,rows:string[][],bounds:OcrBounds,r
   const first=header+1;if(first>last)return;
   const labels:Cell[]=[];
   const titleBottom=bounds.y[0]>5?bounds.y[0]:bounds.y[1];
-  if(header>0&&titleBottom>5)labels.push(await crop(-1,-1,0,0,bitmap.width,titleBottom*sy));
+  if(header>0&&titleBottom>5)labels.push(await crop(-1,-1,0,0,sourceWidth,titleBottom*sy));
   for(let c=0;c<width;c++)labels.push(await cell(header,c));
   for(let r=first;r<=(sheet==='targets'?Math.min(last,header+4):last);r++)labels.push(await cell(r,dateColumn));
   const results=await read(labels,true,false,sheet==='meituan');if(!live())return;
@@ -109,10 +239,18 @@ export async function readDailyGrid(file:File,rows:string[][],bounds:OcrBounds,r
     out[r][dateColumn]=checked;
    }
   }
+  if(sheet==='douyin'){
+   const week=out[header].findIndex(v=>/^(周|星期)$/.test(compact(v)));
+   if(week>=0){
+    // Weekday is a display dimension: derive it only for a validated calendar date.
+    out[header][week]='星期';
+    for(let r=first;r<=last;r++){const d=asDate(out[r][dateColumn]);if(d)out[r][week]='星期'+'日一二三四五六'[new Date(d+'T00:00:00Z').getUTCDay()];}
+   }
+  }
   const numeric:Cell[]=[];const dated:number[]=[];
   for(let r=first;r<=last;r++){
-   if(!asDate(out[r][dateColumn]))continue;
-   dated.push(r);
+   if(asDate(out[r][dateColumn]))dated.push(r);
+   else if(sheet!=='douyin'||!subtotal(out[r][dateColumn]))continue;
    for(let c=0;c<width;c++){
     if(c===dateColumn||isIdentifierColumn(out[header][c])||/^(?:周|星期|门店|门店名称|渠道|范围)$/.test(out[header][c]))continue;
     if(!fieldOf(out[header][c])&&(!template||!out[header][c]||/率|ROI|编号|代码|日期|名称|备注|时间|手机|客户|姓名/i.test(out[header][c])))continue;
@@ -184,5 +322,4 @@ export async function readDailyGrid(file:File,rows:string[][],bounds:OcrBounds,r
    out[0][0]=title;
   }
   return {rows:out,header,uncertain,days:dated.length,discrepancies,checkedDates};
- }finally{bitmap.close();}
 }

@@ -1,3 +1,4 @@
+import {projectTrashPreview} from './project-trash-preview.ts';
 import {resolveLoginCompany} from './login-company.ts';
 import {memberWorkspace} from './member-workspace.ts';
 import {recentCorrections} from './corrections.ts';
@@ -19,6 +20,7 @@ export function createCompanyService(store:CompanyStore,config:{secret:string;or
  }
  if(!actor)return response({error:'请先登录公司工作台'},401);
  if(b.scope==='supervised'&&!['view','report.list','report.compare','ops.options','ops.month','delivery.list','corrections.recent'].includes(b.action))return response({error:'主管项目总览只支持读取已确认数据'},403);
+ if(b.action==='project.trashPreview')return response(await projectTrashPreview(tx,actor,b));
  if(b.action==='workspace.records')return response(await memberWorkspace(tx,actor,b));
  if(b.action==='invite'){if(!actor.owner)return response({error:'只有管理员可邀请或重设登录'},403);const{c}=await loadCompany(tx,actor,b.companyId),login=loginName(b.login);if(!c.members.some(m=>m.login===login&&m.active))throw new WorkbenchError('成员不存在或已停用');const token=randomBytes(32).toString('base64url'),expires=Date.now()+7*86400000;await tx.put(accountKey(c.id,login),{companyId:c.id,login,failed:0,blockedUntil:0,invite:{hash:digest(token),expires}});return response({token,expires,companyId:c.id,companyName:c.name,login});}
  if(b.action==='corrections.recent')return response(await recentCorrections(tx,actor,b.companyId,b.scope));

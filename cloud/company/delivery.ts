@@ -1,3 +1,4 @@
+import {activeProjects} from './model.ts';
 import {supervisedProjects} from './supervised.ts';
 import{randomUUID}from'node:crypto';
 import type{CompanyTx}from'./store.ts';import type{Actor,Company,Project,ProjectHead,PeriodReport}from'./model.ts';import type{WorkItem,FollowUp}from'./work-model.ts';
@@ -17,7 +18,7 @@ export async function executeDelivery(tx:CompanyTx,actor:Actor,b:any,clock=new D
   const scope=supervised?'summary':b.scope||(actor.owner?'manage':member!.roles.includes('leader')&&!member!.roles.some(r=>r==='employee'||r==='supervisor')?'summary':'mine');
   if(!['manage','mine','summary'].includes(scope)||scope==='manage'&&!actor.owner||scope==='mine'&&!actor.owner&&!operational(c,uid)||scope==='summary'&&!supervised&&!actor.owner&&!member!.roles.includes('leader'))fail('没有该项目视图的权限',403);
   if(b.revision!==undefined&&b.revision!==c.revision)fail('项目已发生变化，请刷新后操作',409);
-  const accessible=c.projects.filter(p=>scope==='manage'?true:scope==='summary'?p.publishedVersion>0&&(supervised?supervised(p):actor.owner||ability.can('published',projectSubject({...p,companyId:c.id,published:{version:p.publishedVersion}}as Project))):related(c,p,uid));const headers=accessible.filter(p=>!b.projectId||p.id===b.projectId);
+  const accessible=activeProjects(c).filter(p=>scope==='manage'?true:scope==='summary'?p.publishedVersion>0&&(supervised?supervised(p):actor.owner||ability.can('published',projectSubject({...p,companyId:c.id,published:{version:p.publishedVersion}}as Project))):related(c,p,uid));const headers=accessible.filter(p=>!b.projectId||p.id===b.projectId);
   const page=b.page===undefined?0:b.page;if(!Number.isSafeInteger(page)||page<0)fail('分页位置无效');
   const pageIds=new Set(headers.slice(page*10,page*10+10).map(p=>p.id));
   const summary=scope==='summary', projects=[], projectOptions=[];

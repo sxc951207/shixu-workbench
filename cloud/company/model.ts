@@ -4,7 +4,7 @@ export type Role='employee'|'supervisor'|'leader';
 export type Actor={owner?:boolean;companyId?:string;login?:string};
 export type Member={login:string;name:string;roles:Role[];managerId:string;active:boolean};
 export type Stage='draft'|'submitted'|'returned'|'approved';
-export type ProjectHead={id:string;name:string;ownerLogin:string;reviewerLogin:string;progressLeaderLogin?:string;progressReviewLogin?:string;participants:string[];status:Stage;version:number;publishedVersion:number;submittedBy:string};
+export type ProjectHead={deletedAt?:string;id:string;name:string;ownerLogin:string;reviewerLogin:string;progressLeaderLogin?:string;progressReviewLogin?:string;participants:string[];status:Stage;version:number;publishedVersion:number;submittedBy:string};
 export type DailySchedule={projectId:string;login:string;month:string;days:number[]};
 export type Company={id:string;name:string;revision:number;createdAt:string;members:Member[];projects:ProjectHead[];dailySchedules?:DailySchedule[];policy:{daily:number;monthly:number;yearly:number};reportMonths?:Record<string,{revision:number;versions:number;count:number}>;operatingConfigs?:OperatingConfig[];operatingProposals?:OperatingProposal[];operatingMonths?:Record<string,{revision:number;versions:number;count:number}>};
 export type Project=ProjectHead&{companyId:string;progress:number;achievement:string;risk:string;next:string;createdAt:string;updatedAt:string;comment:string;reviewerName:string;published:Published|null;work?:ProjectWork;submittedAt?:string|null};
@@ -16,3 +16,5 @@ export type PeriodReport=ReportHead&{companyId:string;projectName:string;ownerLo
 export type ReportSnapshot=Omit<PeriodReport,'published'>;
 export type ReportVersion={report:PeriodReport;action:string;actor:string;at:string};
 export type ReportIndex={revision:number;versions:number;items:ReportHead[]};
+
+export function activeProjects(company:Company){return company.projects.filter(project=>!project.deletedAt);}

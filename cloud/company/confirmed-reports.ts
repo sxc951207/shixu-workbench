@@ -1,3 +1,4 @@
+import {activeProjects} from './model.ts';
 import {isDeepStrictEqual} from 'node:util';
 import {WorkbenchError} from '../../lib/workbench/domain.ts';
 import {isComparisonSnapshot} from '../../lib/workbench/report-comparison.ts';
@@ -30,7 +31,7 @@ export async function readReportIndex(tx:CompanyTx,c:Company,month:string):Promi
 }
 
 function visibleConfirmedHead(c:Company,actor:Actor,supervised?:((project:ProjectHead)=>boolean)){
- const ability=companyAbility(actor,c),projects=new Map(c.projects.map(p=>[p.id,p]));
+ const ability=companyAbility(actor,c),projects=new Map(activeProjects(c).map(p=>[p.id,p]));
  return (h:ReportHead)=>{
   if(!h.publishedVersion)return false;
   const project=projects.get(h.projectId)??inconsistent('报表项目关系不完整，请联系管理员');

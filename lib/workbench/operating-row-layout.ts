@@ -1,9 +1,40 @@
+import {assertOperatingYuanUnit} from './operating-field-dictionary.ts';
 import {operatingImportDate} from './operating-import-layout.ts';
 
 const label=(cell:unknown)=>String(cell??'').trim();
 const metricAxis=/^(指标|指标名称|业务指标|统计指标)$/;
 const dateHeader=/^(?:日期|业务日期|填报日期|统计日期|数据日期|发生日期|成交日期|date)$/i;
-const looksDated=(cell:unknown)=>cell instanceof Date||/^\d{1,4}[-/年月]\d/.test(label(cell));
+const looksDated=(cell:unknown)=>cell instanceof Date||/^\d{1,4}\s*[-/年月]\s*\d/.test(label(cell));
+
+/** Locate stacked daily tables only when a header is followed by dated records. */
+export function dailyReportSections(rows:unknown[][]){
+ const groups:{start:number;header:number;end:number;title:string}[]=[];
+ let previous='';
+ for(let i=0;i<rows.length;i++){
+  const labels=rows[i].map(label),date=labels.findIndex(s=>dateHeader.test(s));
+  if(date<0||labels.filter(Boolean).length<2)continue;
+  const next=rows.slice(i+1,i+4).find(r=>r.some(v=>label(v)));
+  if(!next||!looksDated(next[date]))continue;
+  if(labels.some((s,c)=>c!==date&&dateHeader.test(s)&&looksDated(next[c])))
+   throw Error('这一行里有两组日期和明细。请将左右两张表分别截图，或在 Excel 中分成两个工作表后上传。');
+  let start=i;
+  while(start>0){
+   const nonempty=rows[start-1].map(label).filter(Boolean);
+   if(nonempty.length>1||nonempty.length===1&&(!/^[^\d]/.test(nonempty[0])||/合计|小计|汇总行/.test(nonempty[0])))break;
+   start--;
+  }
+  const title=rows.slice(start,i).flat().map(label).filter(Boolean).join(' ');
+  const signature=JSON.stringify(labels.map((s,c)=>c===date?'日期':s));
+  if(previous===signature&&!title)continue;
+  if(groups.length)groups[groups.length-1].end=start;
+  groups.push({start:groups.length?start:0,header:i,end:rows.length,title:[title,labels.filter((s,c)=>s&&c!==date).join('、')].filter(Boolean).join(' · ')});
+  previous=signature;
+ }
+ if(groups.length<2)return [];
+ // Shared or in-section unit notes can occur outside the selected slice.
+ for(const row of rows)for(const cell of row)if(typeof cell==='string')assertOperatingYuanUnit(cell);
+ return groups;
+}
 
 /** Normalize only explicitly labelled daily axes. Keep the source units and title for validation. */
 export function normalizeDailyReportRows(rows:unknown[][],header:number,reference:string){

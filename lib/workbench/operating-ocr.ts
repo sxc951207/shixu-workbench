@@ -55,7 +55,19 @@ export function detectOcrGrid(image:{width:number;height:number;data:Uint8Clampe
  const recoverX=recurrent(vertical,columns,height,horizontal.thin.length);
  const recoverY=recurrent(horizontal,rows,width,vertical.thin.length);
  const x=recoverX?vertical.bands:vertical.thin,y=recoverY?horizontal.bands:horizontal.thin;
- return{width,height,x:x.map(b=>b.center),y:y.map(b=>b.center),...(recoverX||recoverY?{recoveredRules:{x,y}}:{})};
+ // A screenshot may end at the final data row without a bottom horizontal rule.
+ const ys=y.map(b=>b.center),end=ys.at(-1);
+ if(end!==undefined&&ys.length>=4&&x.length>=4){
+  const gaps=ys.slice(-4).slice(1).map((v,i)=>v-ys.slice(-4)[i]).sort((a,b)=>a-b);
+  const tail=height-1-end,step=gaps[1];
+  if(tail>=step*.8&&tail<=step*1.15){
+   const extended=x.filter(b=>{let n=0;for(let py=end+2;py<height;py++){
+    const i=(py*width+b.center)*4;if(Math.max(data[i],data[i+1],data[i+2])<175)n++;
+   }return n>tail*.75;});
+   if(extended.length>=Math.max(3,x.length*.65))ys.push(height-1);
+  }
+ }
+ return{width,height,x:x.map(b=>b.center),y:ys,...(recoverX||recoverY?{recoveredRules:{x,y}}:{})};
 }
 export function cleanOcrGrid(image:{width:number;height:number;data:Uint8ClampedArray},grid:OcrGrid){
  const data=Uint8ClampedArray.from(image.data);if(grid.x.length<3||grid.y.length<2)return data;
@@ -121,6 +133,24 @@ export function ocrTable(words:OcrWord[],grid:OcrGrid){
   cells=lineGroups(words).map(line=>[line]);
  }
  const uncertain:string[]=[],rows=cells.map((row,r)=>row.map((cell,c)=>{if(cell.some(w=>w.confidence<80))uncertain.push(r+':'+c);return joinWords(cell);}));
+ // Very small digits can look convincing to OCR even when read incorrectly.
+ // Compare numeric glyph heights only within their own column.
+ if(structured){
+  const marked=new Set(uncertain);
+  for(let c=0;c<(rows[0]?.length||0);c++){
+   const samples:{row:number;height:number}[]=[];
+   for(let r=0;r<rows.length;r++){
+    if(!/^[+-]?\d[\d,.]*%?$/.test(rows[r][c]||''))continue;
+    const words=cells[r][c];if(!words.length)continue;
+    const height=Math.max(...words.map(w=>w.bbox.y1-w.bbox.y0));
+    if(height>0)samples.push({row:r,height});
+   }
+   if(samples.length<3)continue;
+   const sorted=samples.map(s=>s.height).sort((a,b)=>a-b),median=sorted[Math.floor(sorted.length/2)];
+   for(const sample of samples)if(sample.height<=median*.75&&median-sample.height>=3)marked.add(sample.row+':'+c);
+  }
+  uncertain.splice(0,uncertain.length,...marked);
+ }
  if(rows.length>100||rows.some(row=>row.length>40||row.some(cell=>cell.length>200)))throw Error('识别表格过大或单元格超过200字，请裁剪到100行40列以内');
  return{rows,uncertain,lowConfidence:uncertain.length,structured,inferredBorders,bounds};
 }

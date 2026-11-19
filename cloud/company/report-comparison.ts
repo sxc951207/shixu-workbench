@@ -1,3 +1,4 @@
+import {activeProjects} from './model.ts';
 import {supervisedProjects} from './supervised.ts';
 import {WorkbenchError} from '../../lib/workbench/domain.ts';
 import {buildReportComparison,comparisonPeriods} from '../../lib/workbench/report-comparison.ts';
@@ -14,7 +15,7 @@ export async function executeReportComparison(tx:CompanyTx,actor:Actor,b:any,_cl
  if(!supervised&&!actor.owner&&!member!.roles.includes('leader'))fail('没有已确认报表对比的权限',403);
  if(b.revision!==undefined&&b.revision!==c.revision)fail('公司内容已发生变化，请重新准备对比');
  if(b.projectId!==undefined&&typeof b.projectId!=='string')fail('项目编号无效',400);
- const projectId=b.projectId||'';if(projectId&&!c.projects.some(p=>p.id===projectId&&(!supervised||supervised(p))))fail('项目不存在',404);
+ const projectId=b.projectId||'';if(projectId&&!activeProjects(c).some(p=>p.id===projectId&&(!supervised||supervised(p))))fail('项目不存在',404);
  if(b.page!==undefined&&(!Number.isSafeInteger(b.page)||b.page<0||b.page>=10))fail('对比页码无效',400);
  const{period,previousPeriod}=comparisonPeriods(b.kind,b.periodDate),current=await confirmedHeads(tx,c,actor,period,projectId,supervised),previous=await confirmedHeads(tx,c,actor,previousPeriod,projectId,supervised),currentByProject=new Map(current.map(h=>[h.projectId,h])),previousByProject=new Map(previous.map(h=>[h.projectId,h]));
  const ids=[...new Set([...currentByProject.keys(),...previousByProject.keys()])].sort(),page=b.page||0,now:ReportSnapshot[]=[],before:ReportSnapshot[]=[];

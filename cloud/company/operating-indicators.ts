@@ -1,3 +1,4 @@
+import {activeProjects} from './model.ts';
 import {randomUUID} from 'node:crypto';
 import {WorkbenchError} from '../../lib/workbench/domain.ts';
 import {extendsOperatingDefinition,operatingConfigSchema,operatingProposalSchema} from '../../lib/workbench/operating-data.ts';
@@ -98,7 +99,7 @@ function setConfig(c:Company,config:OperatingConfig){
 export async function executeIndicators(tx:CompanyTx,c:Company,actor:Actor,member:Member|null|undefined,b:Parameters,clock:Date){
  if(b.action==='ops.options'){
   const projects=[];
-  for(const head of c.projects){
+  for(const head of activeProjects(c)){
    const config=configAt(c,head.id),mode=indicatorMode(actor,member,head,config);
    if(!mode)continue;
    const name=mode==='leader'?(await projectAt(tx,c,head.id)).published?.name||config?.confirmedProjectName:head.name;

@@ -1,6 +1,6 @@
 import type {OperatingMetric} from '../../cloud/company/operating-model.ts';
 import {analyzeOperatingHeader,type HeaderAnalysis} from './operating-field-selection.ts';
-import {assertOperatingYuanUnit,operatingFieldDefinition} from './operating-field-dictionary.ts';
+import {assertOperatingYuanUnit,isIdentifierColumn,operatingFieldDefinition} from './operating-field-dictionary.ts';
 import {operatingTemplatePresets} from './operating-templates.ts';
 
 const text=(value:unknown)=>String(value??'').replace(/[\r\n]+/g,'').trim();
@@ -106,4 +106,24 @@ export function inferOperatingTemplate(rows:unknown[][],headerOverride?:number):
  if(data.length<rows.length-index-1)notes.push('已排除小计、合计和汇总行。');
  if(title&&/累计|至|周报|月报/.test(title))notes.push('源表可能是期间累计。此处仅提取指标；填报累计金额时，请使用对应期间和实际截止日。');
  return {headerRow:index,analysis,metrics,notes,...(title&&title.length<=60?{suggestedName:title}:{})};
+}
+
+/** Check columns that carry numbers even when OCR loses their headings. */
+export function inferScreenshotTemplate(rows:unknown[][],header:number){
+ const labels=operatingLeafLabels(rows,header);
+ const missing=labels.flatMap((label,column)=>{
+  const samples=rows.slice(header+1).map(row=>text(row[column])).filter(Boolean);
+  return !label&&samples.some(v=>/^[-+￥¥]?[\d,.]+%?$/.test(v))?[column+1]:[];
+ });
+ if(missing.length)throw Error('第 '+missing.join('、')+' 列有数值，但表头为空。请对照原图补上列名，或移除无需导入的列。');
+ const result=inferOperatingTemplate(rows,header);
+ if(result.suggestedName==='门店总业绩'&&result.analysis.dimension?.label==='门店'&&result.analysis.fields.length===1&&dateColumn.test(labels[0]))return result;
+ const uncertain=labels.flatMap((label,column)=>{
+  if(!result.analysis.textColumns.includes(label)||isIdentifierColumn(label)||dimension.test(label)||dateColumn.test(label)||/周|日期|时间|备注|月份|姓名|联系人|电话|地址|账号|负责人/.test(label))return [];
+  const samples=rows.slice(header+1).map(row=>text(row[column])).filter(Boolean);
+  const count=samples.filter(v=>/^[-+￥¥]?[\d,.]+%?$/.test(v)).length;
+  return count>=2&&count>=samples.length*.7?['第 '+(column+1)+' 列「'+label+'」']:[];
+ });
+ if(uncertain.length)throw Error(uncertain.join('、')+' 含数值，但未能识别为指标。请核对列名和单位，或移除无需导入的列。');
+ return result;
 }

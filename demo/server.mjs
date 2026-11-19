@@ -1,3 +1,4 @@
+import {todayShanghai} from '../lib/workbench/domain.ts';
 import {createServer} from 'node:http';
 import {createReadStream} from 'node:fs';
 import {access,readFile,stat} from 'node:fs/promises';
@@ -62,6 +63,17 @@ const server = createServer(async(req,res)=>{
     }
     if(req.method!=='GET' && req.method!=='HEAD'){res.writeHead(405).end();return;}
     if(path==='/'){res.writeHead(200,{'Content-Type':mime['.html']}).end(req.method==='HEAD'?undefined:home);return;}
+    if(path==='/demo/sample.csv') {
+      const today = todayShanghai();
+      const lines = ['业务日期,成交额'];
+      for (const [daysAgo,amount] of [[4,'128.90'],[3,'0.00'],[2,'176.40']]) {
+        const date = new Date(Date.parse(today+'T12:00:00Z')-daysAgo*86400000).toISOString().slice(0,10);
+        lines.push(date+','+amount);
+      }
+      res.writeHead(200,{'Content-Type':'text/csv; charset=utf-8','Content-Disposition':"attachment; filename=sample.csv; filename*=UTF-8''"+encodeURIComponent('试点成交额.csv')});
+      res.end(req.method==='HEAD'?undefined:'\ufeff'+lines.join('\r\n')+'\r\n');
+      return;
+    }
     if(path==='/workbench'){res.writeHead(302,{Location:'/workbench/'}).end();return;}
     if(!path.startsWith('/workbench/')){res.writeHead(404).end();return;}
     const file = resolve(web,path.slice('/workbench/'.length)||'index.html');
