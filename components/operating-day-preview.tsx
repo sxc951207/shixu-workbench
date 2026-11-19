@@ -2,19 +2,19 @@ import React,{useEffect,useState} from 'react';
 import {previewImportDays,sourceDateGaps,type PreviewDay} from '../lib/workbench/operating-day-preview';
 import type {ImportMonth,OperatingImportEntry} from '../lib/workbench/operating-reimport';
 
-export default function OperatingDayPreview({entries,readMonth}:{entries:OperatingImportEntry[];readMonth:(month:string)=>Promise<ImportMonth>}){
+export default function OperatingDayPreview({entries,readMonth,onMatch}:{onMatch:(v:OperatingImportEntry[]|null)=>void;entries:OperatingImportEntry[];readMonth:(month:string)=>Promise<ImportMonth>}){
  const [attempt,setAttempt]=useState(0);
  const [result,setResult]=useState<{entries:OperatingImportEntry[];days?:PreviewDay[];error?:string}>();
  useEffect(()=>{
   let current=true;
-  setResult(undefined);
-  previewImportDays(entries,readMonth).then(days=>{if(current)setResult({entries,days});},e=>{if(current)setResult({entries,error:e instanceof Error?e.message:'读取失败'});});
+  setResult(undefined);onMatch(null);
+  previewImportDays(entries,readMonth).then(days=>{if(current){setResult({entries,days});onMatch(days.length>0&&days.every(d=>d.kind==='same'&&d.approved)?entries:null);}},e=>{if(current)setResult({entries,error:e instanceof Error?e.message:'读取失败'});});
   return()=>{current=false;};
- },[entries,readMonth,attempt]);
+ },[entries,readMonth,attempt,onMatch]);
  const active=result?.entries===entries?result:undefined;
  if(active?.error)return <div role="alert">未能核对已有日期：{active.error} <button type="button" className="co-text" onClick={()=>setAttempt(n=>n+1)}>重新比对</button></div>;
  if(!active?.days)return <p role="status">正在按原表日期核对已有记录…</p>;
- const days=active.days,added=days.filter(d=>d.kind==='new'),changed=days.filter(d=>d.kind==='changed'),same=days.filter(d=>d.kind==='same'),check=days.filter(d=>d.kind==='check');
+ const days=active.days.filter((_,i)=>entries[i].sheet!=='targets'),added=days.filter(d=>d.kind==='new'),changed=days.filter(d=>d.kind==='changed'),same=days.filter(d=>d.kind==='same'),check=days.filter(d=>d.kind==='check');
  const gaps=sourceDateGaps(days.map(d=>d.date));
  return <section aria-label="按日期比对结果">
   <p role="status"><strong>新增 {added.length} 天 · 有变动 {changed.length} 天 · 相同 {same.length} 天{check.length>0&&' · 需核对 '+check.length+' 天'}</strong></p>

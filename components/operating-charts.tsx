@@ -4,6 +4,7 @@ import {ArrowLeft,BarChart3,ChartNoAxesCombined,ShieldCheck,TriangleAlert} from 
 import {Area,AreaChart,Bar,BarChart,CartesianGrid,Rectangle,ResponsiveContainer,Tooltip,XAxis,YAxis,type BarShapeProps,type MouseHandlerDataParam} from 'recharts';
 import type {OperatingRecord,OperatingSheet,OperatingTemplate} from '../cloud/company/operating-model';
 import {buildOperatingChart,operatingChartDetail,operatingChartOptions,operatingChartPointText,type OperatingChart,type OperatingChartKind,type OperatingChartMetric,type OperatingChartPoint,type OperatingChartPurpose,type OperatingChartSheet} from '../lib/workbench/operating-chart';
+import OperatingWeekdayPattern from './operating-weekday-pattern';
 import '../app/operating-charts.css';
 
 export type OperatingChartsProps={records:OperatingRecord[];cutoff:string;initialSheet?:OperatingSheet;templates?:OperatingTemplate[]};
@@ -124,6 +125,15 @@ export default function OperatingCharts({records,cutoff,initialSheet,templates=[
   </BarChart>}
  </ResponsiveContainer>:null;
 
+ const validPoints=chart?.points.filter(point=>point.value!==null)??[];
+ const last=validPoints.at(-1);
+ const magnitude=(p:OperatingChartPoint)=>p.rawCents!==undefined?BigInt(p.rawCents):p.value!;
+ const peak=validPoints.reduce<OperatingChartPoint|undefined>((highest,p)=>!highest||magnitude(p)>magnitude(highest)?p:highest,undefined);
+ const tied=peak?validPoints.filter(p=>magnitude(p)===magnitude(peak)).length:0;
+ const time=chart?.purpose==='time';
+ const facts:{title:string;point:OperatingChartPoint;note:string}[]=[];
+ if(time&&last)facts.push({title:'最近有数的一天',point:last,note:last.id});
+ if(peak&&(!time||validPoints.length>1))facts.push({title:time?'有记录日期中的最高值':'有数值的门店 / 渠道最高值',point:peak,note:(time?peak.id:peak.label)+(tied>1?' · '+tied+' 项并列':'')});
  return <section className="och-card" aria-labelledby={titleId}>
   <header className="och-heading"><div><span className="och-eyebrow"><ChartNoAxesCombined size={16}/>经营图形</span><h3 id={titleId}>从已确认数据看走势与差异</h3><p>每次查看一个指标，保留金额、数量和比率各自的单位。</p></div><span className="och-badge"><ShieldCheck size={14}/>只读已确认版</span></header>
   {chosen&&<div className="och-selectors">
@@ -134,10 +144,12 @@ export default function OperatingCharts({records,cutoff,initialSheet,templates=[
    </div>}
   {error?<div className="och-message och-warning" role="alert"><TriangleAlert size={20}/><div><strong>暂不能绘制这组数据</strong><p>{error}</p></div></div>:!chart?<div className="och-message" role="status"><BarChart3 size={26}/><div><strong>本月还没有可绘图的已确认经营记录</strong><p>草稿与待确认的新记录不进入图形。已有确认版的更正记录，继续使用原确认值。月目标不作为每日经营发生量。</p></div></div>:<>
    <div className="och-chart-heading"><div><h4>{metric?.label||'选择一个指标开始'}{metric&&<span>单位：{metric.unit}</span>}</h4><p id={descriptionId}>{chart.start} — {chart.end} · {source}{chart.validDays!==null?' · 该指标有确认值 '+chart.validDays+'/'+chart.expected+' 天':chart.source==='daily'?' · '+chart.reported+'/'+chart.expected+' 天有记录':''}</p></div><span className="och-kind">{chart.purpose==='time'?'日期走势':'门店 / 渠道对比'}</span></div>
+   {metric&&facts.length>0&&<section className="op-readout" aria-label="本期看点"><h4>本期看点</h4><div className="op-readout-grid">{facts.map(f=><button type="button" key={f.title} aria-haspopup="dialog" onClick={e=>openPoint(f.point,e.currentTarget)}><span>{f.title} · {metric.label}</span><strong>{operatingChartPointText(f.point,metric)}</strong><small>{f.note} · 查看明细</small></button>)}</div></section>}
    {metric&&chart.periodRatio&&<p className="och-period-ratio"><strong>全期{metric.label} {operatingChartPointText(chart.periodRatio,metric)}</strong> · {chart.periodRatio.reason||'按全期分子、分母合计计算'}</p>}
    {metric?.definition&&<p className="och-definition">{metric.definition}</p>}
    {graphic?<OperatingPlot key={JSON.stringify([chart.sheet,metric?.key,chart.kind,chart.purpose,chart.end])} descriptionId={descriptionId}
      reveal={chart.kind==='bar'||chart.points.filter(point=>point.value!==null).length>1}>{graphic}</OperatingPlot>:<div className="och-message och-plot-empty" role="status"><BarChart3 size={28}/><p>{!metric?'请选择指标。自定义模板有多个字段时，需要先确认要查看的口径。':chart.points.length?'这段范围内暂无完整的该指标数值。请在下方明细查看缺报原因。':'当前数据无法按所选用途绘图，请核对下方说明或切换用途。'}</p></div>}
+   <OperatingWeekdayPattern chart={chart}/>
    {chart.kind==='bar'&&chart.points.some(point=>point.value===0)&&<p className="och-zero-key"><span aria-hidden="true"/>已确认值为 0</p>}
    <div className="och-notes">{chart.notes.map(note=><p key={note}>{note}</p>)}<p>总业绩与各平台金额分别查看，不能再相加；星级不求合计。图形不修改原始记录。</p></div>
    {metric&&chart.points.length>0&&<details className="och-details"><summary>查看数值与缺报明细（{chart.points.length} 项）</summary><div className="och-table-scroll" role="region" aria-label="图形数值与缺报明细，可横向滚动" tabIndex={0}><table><caption>{chart.name} · {metric.label}（{metric.unit}）· {chart.start} — {chart.end}</caption><thead><tr><th scope="col">{chart.purpose==='time'?'日期':'门店 / 渠道'}</th><th scope="col">{metric.label}</th><th scope="col">说明</th></tr></thead><ChartRows points={chart.purpose==='time'?chart.points.map(point=>({...point,label:point.id})):chart.points} metric={metric} onOpen={openPoint}/></table></div></details>}

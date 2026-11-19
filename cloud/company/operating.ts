@@ -3,6 +3,7 @@ import {supervisedProjects} from './supervised.ts';
 import {operatingColumnRules} from './operating-column-rules.ts';
 import {operatingStoreAliases} from './operating-alias.ts';
 import {executeIndicators} from './operating-indicators.ts';
+import {confirmedAmountChange} from './confirmed-amount-change.ts';
 import {recordConfirmedCorrection} from './corrections.ts';
 import type {Actor,Company,Project,Member} from './model.ts';
 import type {CompanyTx} from './store.ts';
@@ -161,6 +162,12 @@ export async function executeOperating(tx:CompanyTx,actor:Actor,b:any,clock=new 
   if(b.revision!==undefined&&b.revision!==c.revision)fail('读取期间经营数据已变化，请重新读取',409);
   const page=b.page===undefined?0:b.page;if(!Number.isSafeInteger(page)||page<0)fail('经营数据页码无效');
   const index=await readIndex(tx,c,month),heads=index.items.filter(h=>h.projectId===p.id&&(!first||h.date>=first&&h.date<=last!&&h.sheet!=='targets'&&!h.sheet.endsWith('-stores'))&&(summary?h.publishedVersion>0&&(!!supervised||rights.leader||canReadSheet(actor,member,c,p,config,h.sheet)):canReadSheet(actor,member,c,p,config,h.sheet))).sort((a,b)=>a.date.localeCompare(b.date)||a.sheet.localeCompare(b.sheet)||a.id.localeCompare(b.id));
+  if(b.confirmedChangeSheet!==undefined){
+   if(!summary||!range||range.start!==month+'-01'||typeof b.confirmedChangeSheet!=='string'||typeof b.changeField!=='string'||b.changeField.length>100)fail('请选择已确认报表、截止日和金额字段');
+   const relevant=heads.filter(head=>head.sheet===b.confirmedChangeSheet);
+   if(relevant.length>31||new Set(relevant.map(head=>head.date)).size!==relevant.length)fail('日期记录不唯一，无法核对累计变化',409);
+   return confirmedAmountChange(tx,relevant,c.id,b.changeField,operatingVersionKey);
+  }
   let pendingChanges=0;
   const records:OperatingRecord[]=[];
   for(const head of heads.slice(page*20,page*20+20)){

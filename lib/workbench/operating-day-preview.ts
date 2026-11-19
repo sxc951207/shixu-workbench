@@ -1,7 +1,7 @@
 import {compareOperatingImport,type ImportMonth,type OperatingImportEntry} from './operating-reimport.ts';
 import {revenueDraftIssue} from './operating-data.ts';
 
-export type PreviewDay={date:string;kind:'new'|'same'|'changed'|'check';details:string[]};
+export type PreviewDay={date:string;approved?:boolean;kind:'new'|'same'|'changed'|'check';details:string[]};
 
 export async function previewImportDays(entries:OperatingImportEntry[],readMonth:(month:string)=>Promise<ImportMonth>){
  const months=new Map<string,ImportMonth>();
@@ -16,7 +16,7 @@ export async function previewImportDays(entries:OperatingImportEntry[],readMonth
   if(!record){days.push({date:entry.date,kind:'new',details:[]});continue;}
   try{
    const {changes}=compareOperatingImport(record,entry);
-   days.push({date:entry.date,kind:changes.length?'changed':'same',details:changes});
+   days.push({date:entry.date,kind:changes.length?'changed':'same',approved:record.status==='approved',details:changes});
   }catch(e){days.push({date:entry.date,kind:'check',details:[(e as Error).message]});}
  }
  return days;
