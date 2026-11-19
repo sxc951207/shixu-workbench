@@ -50,7 +50,7 @@ const server = createServer(async(req,res)=>{
       if(reply.statusCode!==200){res.writeHead(reply.statusCode,{'Content-Type':'application/json'}).end(reply.body);return;}
       const localCookie = toBrowser(reply.headers['Set-Cookie']);
       const other = pairs.find(([,key])=>!localCookie.startsWith(key+'='))[1];
-      res.writeHead(303,{'Set-Cookie':[localCookie,other+'=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0'],Location:'/workbench/?space=company'}).end();
+      res.writeHead(303,{'Set-Cookie':[localCookie,other+'=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0'],Location:role==='staff'?'/workbench/?space=company&tab=operating':'/workbench/?space=company'}).end();
       return;
     }
     if(path.startsWith('/shixu-api/')) {
