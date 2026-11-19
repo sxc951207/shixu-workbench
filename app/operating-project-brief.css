@@ -1,0 +1,14 @@
+.op-brief{margin:16px 0;padding:clamp(14px,3vw,32px);background:var(--co-card,#fff);color:var(--co-text,#182433);border:1px solid var(--co-border,#dce4ed);border-radius:14px;min-width:0}
+.op-brief header,.op-brief-axis,.op-brief-filters,.op-brief [role=group]{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.op-brief header,.op-brief-axis{justify-content:space-between}
+.op-brief h3{font-size:1.45rem;margin:0}.op-brief h4{font-size:1.05rem;margin:0 0 12px}.op-brief h4 small{font-size:.8rem;font-weight:400;margin-left:8px}
+.op-brief section{margin-top:24px;padding-top:18px;border-top:1px solid var(--co-border,#dce4ed);scroll-margin-top:80px}
+.op-brief small,.op-brief p{color:var(--co-muted,#54667a)}.op-brief p{margin:6px 0;line-height:1.65}
+.op-brief button,.op-brief select,.op-brief input{border:1px solid var(--co-border,#cbd5e1);color:inherit;background:var(--co-card,#fff);border-radius:8px;padding:8px 12px;font:inherit}
+.op-brief button{cursor:pointer}.op-brief button[aria-pressed=true]{background:var(--co-soft,#eff6ff);color:var(--co-accent,#28599b);border-color:currentColor;font-weight:700}
+.op-brief-filters{margin-top:16px}.op-brief-filters label{display:grid;gap:3px;font-size:.85rem}.op-brief-insights{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:12px}
+.op-brief-insights article{padding:14px 16px;background:var(--co-soft,#f4f7fa);border-radius:10px}.op-brief a{color:var(--co-accent,#28599b)}
+.op-brief details{margin:10px 0}.op-brief summary{cursor:pointer}
+.op-brief-trend{height:140px;display:flex;align-items:flex-end;gap:clamp(2px,1vw,12px);border-bottom:1px solid var(--co-border,#cbd5e1)}.op-brief-trend i{flex:1;background:var(--co-accent,#4575b9);border-radius:3px 3px 0 0;min-height:2px}.op-brief-trend [data-missing=true]{background:transparent}
+.op-brief-rank{display:grid;gap:7px;margin-bottom:14px}.op-brief-rank>div{display:grid;grid-template-columns:minmax(60px,1fr) minmax(45px,2fr) auto;align-items:center;gap:8px}.op-brief-rank meter{width:100%}.op-brief-rank b{font-size:.88rem;font-variant-numeric:tabular-nums}
+@media(max-width:550px){.op-brief input,.op-brief select{max-width:100%;font-size:16px}.op-brief h3{font-size:1.18rem}.op-brief-rank>div{font-size:.86rem}}
