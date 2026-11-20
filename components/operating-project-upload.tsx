@@ -1,6 +1,6 @@
 'use client';
-import React,{useState} from 'react';
-import {FileUp} from 'lucide-react';
+import React,{useEffect,useRef,useState} from 'react';
+import {FileUp,Plus} from 'lucide-react';
 import OperatingSpreadsheetImport from './operating-spreadsheet-import';
 import type {OperatingStore} from '../cloud/company/operating-model';
 import {inspectUpload,destinationSignature,type Destination,type UploadSource} from '../lib/workbench/operating-upload-route';
@@ -25,11 +25,13 @@ function writePending(key:string,items:Pending[]){
  volatile.set(key,items);
  try{sessionStorage.setItem(key,JSON.stringify(items, (k,v)=>k==='file'?undefined:v));return true;}catch{try{sessionStorage.removeItem(key);}catch{}return false;}
 }
-type Props={storageKey:string;options:Destination[];stores:OperatingStore[];date:string;canCreate:boolean;disabled:boolean;onUse:(destination:Destination,source:UploadSource)=>void;onCreate:(candidate:UploadCandidate)=>void};
-export default function OperatingProjectUpload({storageKey,options,stores,date,canCreate,disabled,onUse,onCreate}:Props){
+type Props={initialOpen?:boolean;storageKey:string;options:Destination[];stores:OperatingStore[];date:string;canCreate:boolean;disabled:boolean;onUse:(destination:Destination,source:UploadSource)=>void;onNewTemplate?:()=>void;onCreate:(candidate:UploadCandidate)=>void};
+export default function OperatingProjectUpload({initialOpen=false,storageKey,options,stores,date,canCreate,disabled,onUse,onCreate,onNewTemplate}:Props){
+ const uploadButton=useRef<HTMLButtonElement>(null);
+ useEffect(()=>{if(initialOpen){uploadButton.current?.focus({preventScroll:true});uploadButton.current?.scrollIntoView({block:'center'});}},[initialOpen]);
  const [sections,setSections]=useState<{source:UploadSource;parts:ReturnType<typeof dailyReportSections>}|null>(null);
  const [periodChoice,setPeriodChoice]=useState<'daily'|'period'|null>(null);
- const [source,setSource]=useState<UploadSource|null>(null),[error,setError]=useState(''),[note,setNote]=useState(''),[open,setOpen]=useState(false),[counter,setCounter]=useState(0);
+ const [source,setSource]=useState<UploadSource|null>(null),[error,setError]=useState(''),[note,setNote]=useState(''),[open,setOpen]=useState(initialOpen),[counter,setCounter]=useState(0);
  let match:ReturnType<typeof inspectUpload>|undefined,issue='';
  if(source)try{match=inspectUpload(source,options,stores,date);}catch(e){issue=(e as Error).message;}
  function memory(signature:string){return storageKey+':mapping:'+signature;}
@@ -71,16 +73,18 @@ export default function OperatingProjectUpload({storageKey,options,stores,date,c
  const choices=match?.candidates.filter(d=>!askPeriod||periodChoice!==null&&periodTable(d)===(periodChoice==='period'))||[];
  const saved=pending(storageKey);
  return <section className="op-panel" aria-label="按项目上传报表">
-  <button type="button" className="op-button" disabled={disabled} aria-expanded={open} onClick={()=>setOpen(v=>!v)}><FileUp size={16}/>上传报表{saved.length?' · '+saved.length+' 份已保留':''}</button>
+  <div className="op-heading-tools"><button ref={uploadButton} type="button" className="op-button" disabled={disabled} aria-expanded={open} onClick={()=>setOpen(v=>!v)}><FileUp size={16}/>上传报表{saved.length?' · '+saved.length+' 份已保留':''}</button>
+   {onNewTemplate&&<button type="button" className="op-button" disabled={disabled} onClick={onNewTemplate}><Plus size={16}/>新增模板</button>}
+  </div>
   {open&&<><p className="op-muted">上传 Excel 或截图，按这份报表的表头和单位查找项目里的对应表。</p>
-   <OperatingSpreadsheetImport referenceDate={date} disabled={disabled} onInspect={inspect} onSourceChange={()=>{setSections(null);setSource(null);setError('');setNote('');}} onUse={()=>{}}/>
+   <OperatingSpreadsheetImport reviewScope={storageKey} purpose="data" aliasStores={stores} referenceDate={date} disabled={disabled} onInspect={inspect} onSourceChange={()=>{setSections(null);setSource(null);setError('');setNote('');}} onUse={()=>{}}/>
    {sections&&<section aria-label="选择原表中的数据区域"><h4>原表里有 {sections.parts.length} 张明细表，请选要导入的一张</h4>
     {sections.parts.map(part=><button type="button" className="op-button" key={part.start} onClick={()=>{
      const s=sections.source;setSource(null);setError('');setNote('');
      try{matchSource({...s,file:undefined,rows:s.rows.slice(part.start,part.end),header:part.header-part.start,tab:(s.tab||s.name)+' · '+part.title});}catch(e){setError((e as Error).message);}
     }}>第 {part.start+1}–{part.end} 行 · {part.title}</button>)}</section>}
    {note&&<p role="status">{note}</p>}
-   {match&&<div className="op-template-designer"><strong>{match.horizontal?'这份门店表要录入哪项数据？':askPeriod&&!periodChoice?'表里的金额对应一天，还是一段时间的累计？':match.candidates.length?'这份数据属于哪张表？':'项目里还没有匹配的表'}</strong>
+   {match&&<div className="op-template-designer"><strong>{match.horizontal&&!choices.length?'当前账号没有这份门店总业绩或目标的填报权限':match.horizontal?'这份门店表要录入哪项数据？':askPeriod&&!periodChoice?'表里的金额对应一天，还是一段时间的累计？':match.candidates.length?'这份数据属于哪张表？':'项目里还没有匹配的表'}</strong>
     <p className="op-muted">{match.source.tab||match.source.name} · {match.source.rows[match.source.header]?.filter(v=>String(v??'').trim()).slice(0,8).join(' / ')}</p>
     {askPeriod&&<div role="group" aria-label="原表的统计时间"><button type="button" className="op-button" aria-pressed={periodChoice==='daily'} onClick={()=>setPeriodChoice('daily')}>一天的数</button> <button type="button" className="op-button" aria-pressed={periodChoice==='period'} onClick={()=>setPeriodChoice('period')}>截至某天的累计</button></div>}
     {match.cumulativeOnly&&!choices.length&&<p>原表标了期间累计，当前项目没有对应的累计表。可先预览字段，逐日填报需要原始日明细。</p>}

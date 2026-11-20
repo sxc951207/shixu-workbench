@@ -1,5 +1,6 @@
 'use client';
 import React,{useEffect,useRef,useState} from 'react';
+import {approvalDescription,approvalNext} from '../lib/workbench/approval-display';
 import {X} from 'lucide-react';
 import {companyRequest} from '../cloud/company-root';
 import type {PeriodReport} from '../cloud/company/model';
@@ -7,7 +8,7 @@ import type {CompanyReviewItem} from '../lib/workbench/company-review';
 
 export default function DailyQueueReview({companyId,item,hasNext,onDone,onClose}:{
  companyId:string;item:CompanyReviewItem;hasNext:boolean;
- onDone:(revision:number,advance:boolean,returned:boolean)=>void;onClose:()=>void;
+ onDone:(revision:number,advance:boolean,returned:boolean,next?:string)=>void;onClose:()=>void;
 }){
  const dialog=useRef<HTMLDialogElement>(null),writing=useRef(false);
  const [report,setReport]=useState<PeriodReport|null>(null),[error,setError]=useState(''),[returning,setReturning]=useState(false);
@@ -15,10 +16,10 @@ export default function DailyQueueReview({companyId,item,hasNext,onDone,onClose}
  useEffect(()=>{dialog.current?.showModal();},[]);
  useEffect(()=>{
   let active=true;
-  void companyRequest({action:'report.list',companyId,scope:'review',kind:'daily',projectId:item.projectId,periodDate:item.date,reviewId:item.id}).then(result=>{
+  void companyRequest(item.approvalFlow?{action:'review.item',companyId,type:'daily',id:item.id}:{action:'report.list',companyId,scope:'review',kind:'daily',projectId:item.projectId,periodDate:item.date,reviewId:item.id}).then(result=>{
    if(!active)return;
-   const current:PeriodReport|undefined=result.reports.find((row:PeriodReport)=>row.id===item.id);
-   if(!current||current.version!==item.version||current.status!=='submitted')throw Error('这份日报已变化，请返回待审列表刷新。');
+   const current:PeriodReport|undefined=result.report||result.reports?.find((row:PeriodReport)=>row.id===item.id);
+   if(!current||current.id!==item.id||current.version!==item.version||current.status!=='submitted')throw Error('这份日报已变化，请返回待审列表刷新。');
    setReport(current);
   }).catch(e=>{if(active)setError(e.message);});
   return()=>{active=false;};
@@ -28,7 +29,7 @@ export default function DailyQueueReview({companyId,item,hasNext,onDone,onClose}
   writing.current=true;setBusy(true);setError('');
   try{
    const result=await companyRequest({action:returning?'report.return':'report.approve',companyId,id:report.id,version:report.version,comment:comment.trim()});
-   onDone(result.companyRevision,advance,returning);
+   onDone(result.companyRevision,advance,returning,result.report?.status==='submitted'?approvalDescription(result.report,'submitted'):undefined);
   }catch(e){setError((e as Error).message);}
   finally{writing.current=false;setBusy(false);}
  }
@@ -38,6 +39,8 @@ export default function DailyQueueReview({companyId,item,hasNext,onDone,onClose}
   {error&&<p role="alert" className="co-error">{error}</p>}
   {!report&&!error&&<p role="status">正在读取提交内容…</p>}
   {report&&<><div className="cr-daily-content">{[['本日成果',report.achievement],['风险与阻碍',report.risk],['下一步',report.next],['需要协调',report.help],['变化原因',report.changeReason]].filter(([,value])=>value).map(([name,value])=><section key={name}><h3>{name}</h3><p>{value}</p></section>)}</div>
+   {approvalDescription(report,'submitted')&&<p className="co-project-people">{approvalDescription(report,'submitted')}</p>}
+   {!returning&&approvalNext(report)&&<p className="co-muted">确认后交给{approvalNext(report)}继续核实。</p>}
    <fieldset disabled={busy}><label>{returning?'退回原因':'确认意见（可选）'}<textarea rows={2} maxLength={1000} value={comment} onChange={e=>setComment(e.target.value)}/></label>
    <div className="co-card-actions" aria-busy={busy}><button className="co-text" onClick={()=>{setReturning(!returning);setComment('');}}>{returning?'返回核对确认':'退回补充'}</button>
    <button className={hasNext?'co-text':'co-primary'} disabled={returning&&!comment.trim()} onClick={()=>void decide(false)}>{busy?'正在处理…':returning?'退回并返回列表':'确认并返回列表'}</button>

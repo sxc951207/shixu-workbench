@@ -1,4 +1,5 @@
 import {memberLoginPattern} from './member-login.ts';
+import {approvalFlowSchema} from './approval-flow-schema.ts';
 import {z} from 'zod';
 import {WorkbenchError} from './domain.ts';
 import {operatingTemplateSchema} from './operating-templates.ts';
@@ -108,7 +109,7 @@ const identity=z.union([z.literal('owner'),z.string().regex(memberLoginPattern)]
 const emptyIdentity=z.union([identity,z.literal('')]);
 const stamp=z.string().max(40).regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/).refine(v=>{const d=new Date(v);return Number.isFinite(d.getTime())&&d.toISOString().slice(0,19)===v.slice(0,19);});
 const day=z.string().refine(v=>{try{operatingDate(v);return true;}catch{return false;}},'经营日期无效');
-const snapshotSchema=z.object({sharedAdSpend:nonnegative.optional(),
+const snapshotSchema=z.object({approvalFlow:approvalFlowSchema.optional(),sharedAdSpend:nonnegative.optional(),
  id:z.string().regex(/^op_[a-f0-9]{32}$/),companyId:z.string().regex(/^co_[a-f0-9]{12}$/),projectId,projectName:name,
  sheet:z.union([builtinSheetSchema,z.string().regex(/^tpl_[a-z0-9_]{1,32}$/)]),date:day,status:z.enum(['draft','submitted','returned','approved']),
  version:nonnegative.min(1),publishedVersion:nonnegative,writerLogin:identity,reviewerLogin:identity,submittedBy:emptyIdentity,submittedName:z.string().max(40),submittedAt:stamp.nullable(),

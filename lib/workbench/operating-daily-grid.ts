@@ -1,3 +1,4 @@
+import {isPrintedWeekTotal,uniquePrintedPair} from './operating-ocr-checks.ts';
 import {checkPrintedWeekday} from './operating-meituan-ocr.ts';
 import {matchPrintedStore} from './operating-store-glyph.ts';
 import {readRevenueGrid} from './operating-revenue-ocr.ts';
@@ -35,13 +36,48 @@ async function gridCellReader(file:File,bounds:OcrBounds,live:Active,register:Re
    return {row,column,bytes:new Uint8Array(await blob.arrayBuffer())};
   }
   function cell(row:number,column:number,zoom?:number){const y=row-bounds.prefix;return crop(row,column,bounds.x[column]*sx,bounds.y[y]*sy,bounds.x[column+1]*sx,bounds.y[y+1]*sy,zoom);}
+  // Tighten around the printed ink. A padded full cell can make a short number
+  // look like a line of punctuation; the second line of a heading is often its unit.
+  async function inkCell(row:number,column:number,firstLine=false){
+   const iy=row-bounds.prefix;
+   const x=Math.round(bounds.x[column]*sx)+2,y=Math.round(bounds.y[iy]*sy)+2;
+   const w=Math.max(1,Math.round(bounds.x[column+1]*sx)-x-1),h=Math.max(1,Math.round(bounds.y[iy+1]*sy)-y-1);
+   const p=ctx!.getImageData(x,y,w,h).data;
+   const light=(i:number)=>(p[i]*3+p[i+1]*6+p[i+2])/10;
+   const samples:number[]=[];
+   for(let i=0;i<p.length;i+=Math.max(1,Math.floor(w*h/200))*4)samples.push(light(i));
+   samples.sort((a,b)=>a-b);const bg=samples[Math.floor(samples.length/2)];
+   let top=h,bottom=-1,left=w,right=-1,lastInk=-1;
+   for(let j=0;j<h;j++){
+    let l=w,r=-1;
+    for(let i=0;i<w;i++)if(Math.abs(light(4*(j*w+i))-bg)>65){l=Math.min(l,i);r=i;}
+    if(r<l)continue;
+    if(firstLine&&lastInk>=0&&j-lastInk>=4)break;
+    top=Math.min(top,j);bottom=j;left=Math.min(left,l);right=Math.max(right,r);lastInk=j;
+   }
+   if(right<left||bottom<top)return cell(row,column);
+   const glyph=document.createElement('canvas');
+   const scale=Math.min(6,44/(bottom-top+1),1800/(right-left+1));
+   const innerW=Math.round((right-left+1)*scale),innerH=Math.round((bottom-top+1)*scale);
+   glyph.width=Math.max(1,innerW)+24;glyph.height=Math.max(1,innerH)+24;
+   const g=glyph.getContext('2d')!;g.fillStyle='white';g.fillRect(0,0,glyph.width,glyph.height);
+   const tile=document.createElement('canvas');tile.width=w;tile.height=h;
+   const t=tile.getContext('2d')!,im=t.createImageData(w,h);
+   for(let i=0;i<p.length;i+=4){
+    const gray=Math.max(0,255-Math.abs(light(i)-bg)*255/Math.max(60,bg>128?bg:255-bg));
+    im.data[i]=im.data[i+1]=im.data[i+2]=gray;im.data[i+3]=255;
+   }
+   t.putImageData(im,0,0);g.drawImage(tile,left,top,right-left+1,bottom-top+1,12,12,innerW,innerH);
+   const blob=await new Promise<Blob>((yes,no)=>glyph.toBlob(b=>b?yes(b):no(Error('截图读取失败'))));
+   return {row,column,bytes:new Uint8Array(await blob.arrayBuffer())};
+  }
   async function read(cells:Cell[],chinese:boolean,unrestricted=false,multiline=false){
    if(!cells.length||!live())return [];
    const base=new URL('/workbench/ocr/v7',location.origin).href;
    const job=startOcrJob(cells[0].bytes,{assetBase:base,remainingCells:cells.slice(1).map(c=>c.bytes),chineseCells:chinese,multilineCells:multiline,digitsOnly:!chinese&&!unrestricted,workerFactory:()=>new Worker(base+'/worker.min.js')});register(job);
    return (await job.promise).cellTexts||[];
   }
-  return {cell,crop,read,sx,sy,width,ctx,sourceWidth:canvas.width};
+  return {cell,inkCell,crop,read,sx,sy,width,ctx,sourceWidth:canvas.width};
 }
 
 /** Recheck visible ink in missing numeric cells of unfamiliar dated tables. */
@@ -174,7 +210,7 @@ export async function readDailyGrid(file:File,rows:string[][],bounds:OcrBounds,r
  let header=rows.findIndex((r,i)=>i>=bounds.prefix&&r.some(dateHeading));
  const last=bounds.prefix+bounds.y.length-2;
  if(bounds.x.length<3||last<bounds.prefix+1||bounds.y.length>72)return;
- const {cell,crop,read,sx,sy,width,ctx,sourceWidth}=await gridCellReader(file,bounds,live,register);
+ const {cell,inkCell,crop,read,sx,sy,width,ctx,sourceWidth}=await gridCellReader(file,bounds,live,register);
   let dateColumn=header<0?-1:rows[header].findIndex(dateHeading);
   if(header<0){
    // Whole-image OCR can miss an entire header cell even in a clearly ruled table.
@@ -220,6 +256,22 @@ export async function readDailyGrid(file:File,rows:string[][],bounds:OcrBounds,r
    for(const [i,c] of uncertainHeaders.entries()){
     const f=fieldOf(alternate[i]||'');
     if(f)out[header][c]=f.label;
+   }
+  }
+  const unresolvedHeadings=uncertainHeaders.filter(c=>!fieldOf(out[header][c]));
+  if(unresolvedHeadings.length){
+   const tight:Cell[]=[], enlarged:Cell[]=[];
+   for(const c of unresolvedHeadings){
+    tight.push(await inkCell(header,c,true));enlarged.push(await cell(header,c,4));
+   }
+   const a=await read(tight,true);if(!live())return;
+   const b=await read(enlarged,true,false,true);if(!live())return;
+   for(const [i,c] of unresolvedHeadings.entries()){
+    const candidates=[a[i],b[i]].map(v=>fieldOf(v||'')).filter(f=>!!f);
+    const f=candidates[0];
+    if(!f||!candidates.every(other=>other.label===f.label)||out[header].includes(f.label))continue;
+    if(/[（(]元[）)]$/.test(compact(out[header][c]))&&f.kind!=='money')continue;
+    out[header][c]=f.label;
    }
   }
   const checkedDates:string[]=[];
@@ -276,9 +328,17 @@ export async function readDailyGrid(file:File,rows:string[][],bounds:OcrBounds,r
   const readings=new Map<Cell,string>();
   knownCells.forEach((c,i)=>readings.set(c,knownNumbers[i]||''));unknownCells.forEach((c,i)=>readings.set(c,rawUnknown[i]||''));
   const numbers=numeric.map(c=>readings.get(c)||'');
+  const pixelReadings=new Map<string,Set<string>>();
+  function remember(row:number,column:number,value:string){
+   if(!plainNumber(value))return;
+   const key=row+':'+column;
+   const readings=pixelReadings.get(key)??new Set<string>();
+   readings.add(value);pixelReadings.set(key,readings);
+  }
   const uncertain:string[]=[];
   for(const [i,{row,column}] of numeric.entries()){
    const old=rows[row][column]?.trim()||'',fresh=numbers[i]?.trim()||'';
+   remember(row,column,old);remember(row,column,fresh);
    if(plainNumber(fresh)&&(!plainNumber(old)||Number(fresh)===Number(old)))out[row][column]=fresh;
    else {out[row][column]=old;uncertain.push(row+':'+column);}
   }
@@ -288,32 +348,105 @@ export async function readDailyGrid(file:File,rows:string[][],bounds:OcrBounds,r
    const again=await read(retry,false);if(!live())return;
    for(const [i,{row,column}] of retry.entries()){
     const value=again[i]?.trim()||'',original=rows[row][column]||'',first=numbers[numeric.findIndex(c=>c.row===row&&c.column===column)]?.trim()||'';
+    remember(row,column,value);
     if(plainNumber(value)&&(!plainNumber(original)&&!plainNumber(first)||[original,first].some(v=>plainNumber(v)&&Number(v)===Number(value))))out[row][column]=value;
     else out[row][column]='';
    }
   }
+  const periods:{summary:string[];details:number[]}[]=[];
+  const datedSet=new Set(dated);
+  let week:number[]=[];
+  for(let r=first;r<=last;r++){
+   if(datedSet.has(r))week.push(r);
+   if(isPrintedWeekTotal(out[r][dateColumn])){
+    if(week.length)periods.push({summary:out[r],details:week});
+    week=[];
+   }
+  }
   const month=out.slice(first,last+1).find(row=>compact(row[dateColumn])==='月度');
-  const discrepancies:string[]=[];
-  if(month)for(let c=0;c<width;c++){
-   const f=fieldOf(out[header][c]);if(!f||f.kind==='stars'||!plainNumber(month[c]))continue;
-   const cents=(v:string)=>Math.round(Number(v)*100);
-   const values=dated.map(r=>out[r][c]),expected=cents(month[c]),sum=values.reduce((n,v)=>n+(plainNumber(v)?cents(v):0),0);
+  if(month&&dated.length)periods.push({summary:month,details:dated});
+  const discrepancies=new Set<string>();
+  const cents=(v:string)=>Math.round(Number(v)*100);
+  function matchesSummary(summary:string[],details:number[],column:number){
+   return plainNumber(summary[column])&&details.every(r=>plainNumber(out[r][column]))&&details.reduce((n,r)=>n+cents(out[r][column]),0)===cents(summary[column]);
+  }
+  const alternateReadings=new Map<string,string>();
+  const tightReads=new Set<string>();
+  for(const {summary,details} of periods)for(let c=0;c<width;c++){
+   const f=fieldOf(out[header][c]);if(!f||f.kind==='stars'||!plainNumber(summary[c]))continue;
+   const values=details.map(r=>out[r][c]),expected=cents(summary[c]),sum=values.reduce((n,v)=>n+(plainNumber(v)?cents(v):0),0);
    if(values.every(plainNumber)&&sum===expected)continue;
-   // A total can corroborate a fresh pixel reading, but must never manufacture a missing value.
+   // Only accept a value actually read from the cell, corroborated by its printed subtotal.
    const alternatives:Cell[]=[];
-   for(const r of dated){
+   for(const r of details){
+    if(alternateReadings.has(r+':'+c))continue;
     const y=r-bounds.prefix,x0=bounds.x[c]*sx,x1=bounds.x[c+1]*sx,margin=out[r][c].length<=3?(x1-x0)*.18:0;
     alternatives.push(await crop(r,c,x0+margin,bounds.y[y]*sy,x1-margin,bounds.y[y+1]*sy,4));
    }
-   const fresh=await read(alternatives,false,true);if(!live())return;
-
-   const candidates=dated.flatMap((r,i)=>{
-    const v=compact(fresh[i]||'').replace(/^[Iil|1]+$/,s=>'1'.repeat(s.length)),old=values[i];
-    return plainNumber(v)&&v!==old&&(!plainNumber(old)||Number(old)!==Number(v))&&
-     sum-(plainNumber(old)?cents(old):0)+cents(v)===expected&&values.every((s,j)=>j===i||plainNumber(s))?[{r,v}]:[];
+   if(alternatives.length){
+    const fresh=await read(alternatives,false,true);if(!live())return;
+    alternatives.forEach(({row},i)=>alternateReadings.set(row+':'+c,compact(fresh[i]||'')));
+   }
+   const findCandidates=()=>details.flatMap((r,i)=>{
+    remember(r,c,alternateReadings.get(r+':'+c)||'');
+    const old=values[i],readings=pixelReadings.get(r+':'+c);
+    if(!readings||!values.every((v,j)=>j===i||plainNumber(v)))return [];
+    const value=[...readings].find(v=>(!plainNumber(old)||Number(old)!==Number(v))&&sum-(plainNumber(old)?cents(old):0)+cents(v)===expected);
+    return value?[{r,v:value}]:[];
    });
-   if(candidates.length===1)out[candidates[0].r][c]=candidates[0].v;
-   else discrepancies.push(f.label);
+   let candidates=findCandidates();
+   if(!candidates.length){
+    const crops:Cell[]=[];
+    for(const r of details){
+     const key=r+':'+c;if(tightReads.has(key))continue;
+     crops.push(await inkCell(r,c));tightReads.add(key);
+    }
+    if(crops.length){
+     const digits=await read(crops,false);if(!live())return;
+     crops.forEach(({row},i)=>remember(row,c,compact(digits[i]||'')));
+     candidates=findCandidates();
+    }
+   }
+   if(candidates.length===1){
+    const {r,v}=candidates[0];
+    const agreesElsewhere=periods.some(p=>p.details.includes(r)&&matchesSummary(p.summary,p.details,c));
+    if(!agreesElsewhere){out[r][c]=v;continue;}
+   }
+   if(candidates.length===0){
+    const pair=uniquePrintedPair(values,details.map(r=>[...(pixelReadings.get(r+':'+c)??[])]),summary[c],f.kind==='count'?0:2);
+    if(pair&&pair.every(({i})=>uncertain.includes(details[i]+':'+c)||!plainNumber(values[i]))){
+     const changes=new Map(pair.map(({i,v})=>[details[i],v]));
+     const overlaps=periods.filter(p=>p.summary!==summary&&p.details.some(r=>changes.has(r)));
+     if(overlaps.length&&overlaps.every(p=>plainNumber(p.summary[c])&&p.details.every(r=>plainNumber(changes.get(r)??out[r][c]))&&p.details.reduce((n,r)=>n+cents(changes.get(r)??out[r][c]),0)===cents(p.summary[c]))){
+      for(const {i,v} of pair)out[details[i]][c]=v;
+      continue;
+     }
+    }
+   }
+   for(const r of details){
+    const key=r+':'+c,alt=alternateReadings.get(key);
+    if((!plainNumber(out[r][c])||alt&&plainNumber(alt)&&Number(alt)!==Number(out[r][c]))&&!uncertain.includes(key))uncertain.push(key);
+   }
+  }
+  for(const {summary,details} of periods)for(let c=0;c<width;c++){
+   const f=fieldOf(out[header][c]);
+   if(f&&f.kind!=='stars'&&plainNumber(summary[c])&&!matchesSummary(summary,details,c))discrepancies.add(f.label);
+  }
+  if(sheet==='douyin'||sheet==='meituan'){
+   const spend=out[header].indexOf('推广花费');
+   const missing:Cell[]=[], ratios:number[]=[];
+   for(const [c,label] of out[header].entries()){
+    const amount=label==='核销ROI'?out[header].indexOf('核销金额'):label==='下单ROI'?out[header].indexOf('下单金额'):-1;
+    if(spend<0||amount<0)continue;
+    for(const r of dated)if(out[r][c]==='待核对'&&plainNumber(out[r][amount])&&plainNumber(out[r][spend])&&Number(out[r][spend])>0){
+     missing.push(await inkCell(r,c));ratios.push(Number(out[r][amount])/Number(out[r][spend]));
+    }
+   }
+   const texts=await read(missing,false);if(!live())return;
+   for(const [i,{row,column}] of missing.entries()){
+    const text=compact(texts[i]||'');
+    if(/^\d+\.\d{1,2}$/.test(text)&&Math.abs(Number(text)-ratios[i])<=0.5*10**-(text.split('.')[1].length)+1e-9)out[row][column]=text;
+   }
   }
   if(sheet==='douyin'&&title.includes('平台数据')&&out[header].includes('私信开口人数')&&out[header].includes('私信咨询人数'))title=title.replace('拌音','抖音');
   // Preserve unreadable rows for correction. Only a visibly labelled subtotal is excluded from preview.
@@ -321,5 +454,5 @@ export async function readDailyGrid(file:File,rows:string[][],bounds:OcrBounds,r
    for(let r=0;r<header;r++)out[r]=Array(width).fill('');
    out[0][0]=title;
   }
-  return {rows:out,header,uncertain,days:dated.length,discrepancies,checkedDates};
+  return {rows:out,header,uncertain,days:dated.length,discrepancies:[...discrepancies],checkedDates};
 }

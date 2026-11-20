@@ -46,7 +46,7 @@ export async function dailyRosterAction(tx:CompanyTx,actor:Actor,c:Company,membe
   if(!status)continue;
   const key=project.id+':'+h.authorLogin;
   const row:DailyRosterRow={projectId:project.id,projectName:project.name,login:h.authorLogin,name:names.get(h.authorLogin)||(h.authorLogin==='owner'?'管理员':h.authorLogin),assigned:rows.has(key),status};
-  if(canReviewDaily(actor,c,project,h))row.review={type:'daily',id:h.id,projectId:project.id,projectName:project.name,date,start:date,end:date,version:h.version,submittedBy:h.submittedBy,submittedAt:null,amendment:!!h.publishedVersion};
+  if(canReviewDaily(actor,c,project,h))row.review={...(h.approvalFlow?{approvalFlow:h.approvalFlow}:{}),type:'daily',id:h.id,projectId:project.id,projectName:project.name,date,start:date,end:date,version:h.version,submittedBy:h.submittedBy,submittedAt:null,amendment:!!h.publishedVersion};
   rows.set(key,row);
  }
  return {date,companyRevision:c.revision,projects,rows:[...rows.values()]} satisfies DailyRoster;

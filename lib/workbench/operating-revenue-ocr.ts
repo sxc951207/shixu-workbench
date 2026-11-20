@@ -90,7 +90,8 @@ export async function readRevenueGrid(rows:string[][],header:number,last:number,
   }
   out.push([label,...(verified||values.map(v=>v.map(amount).find(Boolean)||v.find(s=>s.trim())||''))]);
  }
- return {rows:out,header,uncertain,days,discrepancies,revenueMatrix:true};
+ const sourceRows=[...rows.slice(0,header+1).map((_,i)=>i),...facts.map(f=>f.row)];
+ return {rows:out,header,uncertain,days,discrepancies,sourceRows,revenueMatrix:true};
 }
 
 export function checkRevenueOcrTotals(matrix:unknown[][],header:number){
@@ -105,4 +106,25 @@ export function checkRevenueOcrTotals(matrix:unknown[][],header:number){
  if(total&&facts.length)for(let c=1;c<total.length;c++){
   if(amount(String(total[c]??''))&&facts.reduce((n,r)=>n+cents(amount(String(r[c]??''))),0)!==cents(amount(String(total[c]))))throw Error(String(matrix[header][c])+' 的每日金额与原图列合计不一致，请核对原图。');
  }
+}
+
+export function recalculateRevenueTotals(rows:string[][],header:number){
+ const next=rows.map(r=>[...r]),width=next[header]?.length??0;
+ if(width<3||next[header][0]!=='日期'||!sumLabel(next[header][width-1]))throw Error('请先核对日期、门店和合计列。');
+ const sums=Array<number>(width-2).fill(0),totals:string[][]=[],dates=new Set<string>();
+ for(const row of next.slice(header+1)){
+  if(targetLabel(row[0]))continue;
+  if(sumLabel(row[0])){totals.push(row);continue;}
+  const date=operatingImportDate(row[0]);
+  if(dates.has(date))throw Error(date+' 重复，请先核对日期。');dates.add(date);
+  const values=sums.map((_,i)=>{
+   const value=amount(row[i+1]||'');
+   if(!value)throw Error(date+' 的'+next[header][i+1]+'金额缺失或超过两位小数，请先核对。');
+   return cents(value);
+  });
+  values.forEach((v,i)=>{sums[i]+=v;});row[width-1]=(values.reduce((a,b)=>a+b,0)/100).toFixed(2);
+ }
+ if(!dates.size||totals.length>1)throw Error('请先核对日期明细和合计行。');
+ if(totals.length)totals[0].splice(1,width-1,...[...sums,sums.reduce((a,b)=>a+b,0)].map(v=>(v/100).toFixed(2)));
+ return next;
 }

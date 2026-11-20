@@ -268,3 +268,40 @@
 .op-source-local{max-width:100%;margin-block:6px}
 .op-source-local>div{max-height:210px;overflow:auto;background:#fff}
 .op-source-local img{display:block;max-width:none}
+
+
+/* Keep the editable figure and the original crop together at phone widths. */
+.op-screenshot .op-priority-cell {
+ display: grid;
+ grid-template-columns: repeat(2, minmax(0, 1fr));
+ align-items: start;
+ gap: 8px 16px;
+ padding: 14px 0;
+ border-top: 1px solid var(--company-border, #ccd7e4);
+}
+.op-screenshot .op-priority-cell > label {
+ display: grid;
+ gap: 5px;
+ min-width: 0;
+ font-size: 14px;
+}
+.op-screenshot .op-priority-cell > label input {
+ box-sizing: border-box;
+ width: 100%;
+ min-height: 44px;
+ color: var(--company-text, #16243e);
+ background: var(--company-panel, #f6f8fc);
+ border: 1px solid var(--company-border, #ccd7e4);
+ font-size: 16px;
+}
+.op-screenshot .op-priority-cell > label small { font-size: 13px; line-height: 1.5; }
+.op-screenshot .op-priority-cell > figure { grid-area: 1 / 2; margin: 0; max-width: 100%; }
+.op-screenshot .op-priority-cell > button { grid-column: 1 / -1; justify-self: start; }
+@media (max-width: 560px) {
+ .op-screenshot .op-priority-cell { grid-template-columns: minmax(0, 1fr); }
+ .op-screenshot .op-priority-cell > figure { grid-area: auto; }
+}
+
+.op-history-tools { margin-block: .5rem 1rem; }
+.op-history-tools > summary { width: fit-content; cursor: pointer; color: var(--co-accent, currentColor); padding-block: .6rem; font-size: .875rem; }
+.op-history-tools > summary:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }

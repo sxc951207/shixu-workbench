@@ -6,7 +6,7 @@ import {normalizeDailyReportRows} from './operating-row-layout.ts';
 import {operatingLeafLabels} from './operating-template-inference.ts';
 import {isIdentifierColumn} from './operating-field-dictionary.ts';
 
-export type UploadSource={name:string;tab:string;rows:unknown[][];header:number;image:boolean;file?:File};
+export type UploadSource={name:string;tab:string;rows:unknown[][];header:number;image:boolean;file?:File;reviewEdited?:boolean};
 export type Destination={sheet:OperatingSheet;name:string;template?:OperatingTemplate};
 const text=(v:unknown)=>String(v??'').trim();
 const dimension=/^(门店(?:名称|名)?|店名|渠道(?:名称)?|范围|名称|账号(?:名称)?|店铺名称)$/;

@@ -1,6 +1,6 @@
 import type{OperatingSheet}from'../../cloud/company/operating-model.ts';
 export type CompanyReviewType='project'|'operating'|'daily'|'weekly'|'monthly';
-export type CompanyReviewItem={submissionBatchId?:string;type:CompanyReviewType;id:string;projectId:string;projectName:string;version:number;submittedBy:string;submittedAt:string|null;submittedName?:string;excerpt?:string;date:string;start?:string;end?:string;sheet?:OperatingSheet;name?:string;amendment?:boolean};
+export type CompanyReviewItem={approvalFlow?:import('../../cloud/company/approval-flow.ts').ApprovalFlow;submissionBatchId?:string;type:CompanyReviewType;id:string;projectId:string;projectName:string;version:number;submittedBy:string;submittedAt:string|null;submittedName?:string;excerpt?:string;date:string;start?:string;end?:string;sheet?:OperatingSheet;name?:string;amendment?:boolean};
 export type CompanyReviewCursor={stage:number;offset:number;query:string};
 export type CompanyReviewFilter={type:'all'|CompanyReviewType;projectId:string;month:string;search?:string};
 export type CompanyReviewPage={items:CompanyReviewItem[];nextCursor:CompanyReviewCursor|null;companyRevision:number;scanned:{candidates:number;indexes:number}};

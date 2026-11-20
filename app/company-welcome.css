@@ -1,13 +1,14 @@
 .sx-welcome {
- display:flex; align-items:flex-start; gap: .85rem; margin: 1rem 0;
- padding:clamp(1rem,2.4vw,1.55rem); border:1px solid #ccd9ee; border-radius:14px;
- background:#f3f7ff; color:#182e50; line-height:1.6;
+ display:flex; align-items:center; gap: .65rem; margin: .75rem 0;
+ padding:.35rem .85rem; border:1px solid var(--co-border,#ccd9ee); border-radius:14px;
+ background:var(--co-panel,#f3f7ff); color:var(--co-text,#182e50); line-height:1.6;
 }
-.sx-welcome>svg { flex:none; margin-top:.18rem; color:#3158a5 }
-.sx-welcome>div {flex:1;min-width:0}
-.sx-welcome strong,.ch-first-steps h2 {font-size:1.18rem}
+.sx-welcome>svg { flex:none; margin-top:.18rem; color:var(--co-accent,#3158a5) }
+.sx-welcome>div {flex:1;min-width:0;display:flex;align-items:center;gap:.65rem;flex-wrap:wrap}
+.sx-welcome strong {font-size:.875rem}
+.ch-first-steps h2 {font-size:1.18rem}
 .sx-welcome p {margin:.25rem 0 .55rem;color:#475971}
-.sx-welcome button {display:inline-flex;align-items:center;gap:.45rem;background:transparent;border:0;color:#244d96;cursor:pointer;font:inherit;font-weight:600;padding:.32rem 0}
+.sx-welcome button {display:inline-flex;align-items:center;gap:.45rem;background:transparent;border:0;color:var(--co-accent,#244d96);cursor:pointer;font:inherit;font-weight:600;padding:.32rem 0}
 .sx-welcome .sx-welcome-close {align-self:flex-start;justify-content:center;width:36px;height:36px;flex:none;padding:0}
 .ch-first-steps {margin:1.25rem 0;padding:clamp(1rem,2vw,1.65rem);background:var(--co-panel,#fff);border:1px solid var(--co-border,#dbe3ef);border-radius:16px}
 .ch-first-steps h2 {margin:0 0 .65rem;color:var(--co-text,inherit)}

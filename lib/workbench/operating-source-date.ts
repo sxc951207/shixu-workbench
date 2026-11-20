@@ -48,8 +48,16 @@ export function sourceBusinessDates(matrix:unknown[][],header:number,sheet:Opera
  const mapped=platform?labels.map(label=>platformImportField(label,sheet,fields)):[];
  const focusRequired=!includeOptionalOnly&&mapped.some(field=>field?.required);
  const inputs=mapped.flatMap((field,i)=>field&&(!focusRequired||field.required)?[i]:[]);
+ // Custom reports can contain unmapped inputs. Check those as well as known fields,
+ // while ignoring the weekday and failed computed ratios on prefilled calendar rows.
+ const customColumns=sheet.startsWith('tpl_')?labels.flatMap((label,i)=>
+  label&&i!==dateCol&&!/^(?:周|星期|周次|星期几|门店|门店名称|渠道|项目|备注|序号)$/.test(label)?[i]:[]):[];
  const dates=new Set<string>();
  for(const row of matrix.slice(header+1)){
+  if(customColumns.length&&customColumns.every(i=>{
+   const value=String(row[i]??'').trim();
+   return !value||(/率|ROI|投产比/i.test(labels[i])&&value==='#DIV/0!');
+  }))continue;
   if(inputs.length&&inputs.every(i=>!String(row[i]??'').trim()))continue;
   try{const d=operatingImportDate(row[dateCol],reference);dates.add(sheet==='targets'?d.slice(0,7)+'-01':d);}catch{/* Unreadable dates are checked during preview. */}
  }

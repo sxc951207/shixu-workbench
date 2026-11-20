@@ -12,3 +12,11 @@
 .op-brief-trend{height:140px;display:flex;align-items:flex-end;gap:clamp(2px,1vw,12px);border-bottom:1px solid var(--co-border,#cbd5e1)}.op-brief-trend i{flex:1;background:var(--co-accent,#4575b9);border-radius:3px 3px 0 0;min-height:2px}.op-brief-trend [data-missing=true]{background:transparent}
 .op-brief-rank{display:grid;gap:7px;margin-bottom:14px}.op-brief-rank>div{display:grid;grid-template-columns:minmax(60px,1fr) minmax(45px,2fr) auto;align-items:center;gap:8px}.op-brief-rank meter{width:100%}.op-brief-rank b{font-size:.88rem;font-variant-numeric:tabular-nums}
 @media(max-width:550px){.op-brief input,.op-brief select{max-width:100%;font-size:16px}.op-brief h3{font-size:1.18rem}.op-brief-rank>div{font-size:.86rem}}
+
+.op-brief-more summary {width:fit-content; padding:8px 0; color:var(--co-accent); font-weight:600}
+.op-brief-more dl {display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:0 24px; margin:0}
+.op-brief-more dl > div {display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px solid var(--co-border)}
+.op-brief-more dt {color:var(--co-muted)}
+.op-brief-more dd {margin:0; text-align:right; font-variant-numeric:tabular-nums}
+.op-brief-more dd small {display:block}
+@media (min-width:360px) and (max-width:550px) { .op-brief .op-readout-grid {grid-template-columns:repeat(2,minmax(0,1fr))} .op-brief .op-readout-grid article {padding:10px} }

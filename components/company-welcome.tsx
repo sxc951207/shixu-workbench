@@ -18,5 +18,5 @@ export function CompanyWelcome({scope,roles,onGuide,disabled=false}:{scope:strin
  const [dismissed,setDismissed]=useState(()=>{try{return localStorage.getItem(key)==='1';}catch{return false;}});
  if(dismissed)return null;
  function dismiss(){setDismissed(true);try{localStorage.setItem(key,'1');}catch{}}
- return <aside className="sx-welcome" aria-label="新人入门"><BookOpen size={22} aria-hidden="true"/><div><strong>欢迎使用拾序</strong><p>个人待办放在自己的工作总览。公司的项目数据由员工填报、主管核实，领导查看已确认的结果。</p><button type="button" disabled={disabled} onClick={()=>{dismiss();onGuide();}}>{roles?firstSteps(roles)[0].title:'查看我的操作步骤'} <ArrowRight size={15}/></button></div><button type="button" className="sx-welcome-close" aria-label="关闭首次使用提示" onClick={dismiss}><X size={17}/></button></aside>;
+ return <aside className="sx-welcome" aria-label="新人入门"><BookOpen size={22} aria-hidden="true"/><div><strong>首次使用</strong><button type="button" disabled={disabled} onClick={()=>{dismiss();onGuide();}}>{roles?firstSteps(roles)[0].title:'查看我的操作步骤'} <ArrowRight size={15}/></button></div><button type="button" className="sx-welcome-close" aria-label="关闭首次使用提示" onClick={dismiss}><X size={17}/></button></aside>;
 }

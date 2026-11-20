@@ -38,3 +38,11 @@
 .co-backup-latest { display: grid; gap: .25rem; margin: .75rem 0 1rem; }
 .co-backup-latest strong { font-size: clamp(1.15rem, 3vw, 1.65rem); font-variant-numeric: tabular-nums; }
 .company-app .cdt-state.unavailable, .company-app .cdt-progress[role=alert] { border-inline-start: 3px solid #bd602b; padding-inline-start: .75rem; }
+.co-org-settings {display:grid;gap:12px}
+.co-order-row {display:flex;align-items:end;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--co-line);padding:5px 0}
+.co-order-row label {flex:1 1 170px;min-width:0}
+.co-order-buttons {display:inline-flex;flex-wrap:nowrap}
+.co-org-person {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;padding:10px 0;border-bottom:1px solid var(--co-line)}
+.co-org-person strong {grid-column:1/-1;overflow-wrap:anywhere}
+.co-org-person select,.co-order-row select {width:100%;max-width:100%}
+@media(max-width:450px){.co-org-person{grid-template-columns:1fr}.co-order-row label{flex-basis:100%}}

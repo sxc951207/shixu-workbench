@@ -1,5 +1,5 @@
 export type OcrWord={text:string;confidence:number;bbox:{x0:number;y0:number;x1:number;y1:number}};
-export type OcrBounds={width:number;height:number;x:number[];y:number[];prefix:number};
+export type OcrBounds={width:number;height:number;x:number[];y:number[];prefix:number;sourceRows?:number[];sourceColumns?:number[]};
 type RuleBand={start:number;end:number;center:number};
 export type OcrGrid={width:number;height:number;x:number[];y:number[];recoveredRules?:{x:RuleBand[];y:RuleBand[]}};
 const bytesLimit=10*1024*1024,pixelLimit=12_000_000;

@@ -1,11 +1,12 @@
 'use client';
 import React,{useEffect,useId,useMemo,useRef,useState} from 'react';
 import OperatingColumnReview,{type ColumnTask} from './operating-column-review';
+import {importPlatformConflict} from '../lib/workbench/operating-paste';
 import {identifyColumns} from '../lib/workbench/operating-column-map';
 import {ClipboardPaste,FileSpreadsheet,ImagePlus,Upload,X} from 'lucide-react';
-import {readOperatingFile,type OperatingFileSheet} from '../lib/workbench/operating-file';
+import {PlatformScopeNeeded,readOperatingFile,type OperatingFileSheet} from '../lib/workbench/operating-file';
 import {normalizeDailyReportRows} from '../lib/workbench/operating-row-layout';
-import {sourceBusinessDates} from '../lib/workbench/operating-source-date';
+import {groupSourceRows,sourceBusinessDates} from '../lib/workbench/operating-source-date';
 import type {OperatingSheet} from '../cloud/company/operating-model';
 import {companyRequest} from '../cloud/company-root';
 import {StoreMappingNeeded} from '../lib/workbench/operating-store-match';
@@ -16,14 +17,16 @@ import {projectReportLayout} from '../lib/workbench/operating-project-layout';
 
 import type {UploadSource} from '../lib/workbench/operating-upload-route';
 
+import {isReportVideo,reportMediaAccept} from './operating-video-frame';
 const screenshotTypes=['image/png','image/jpeg','image/webp'];
 const pasteFallback='可以点一下填报窗口，按 Ctrl+V（Mac 用 ⌘V），或从相册选择截图。';
 
-export default function OperatingSpreadsheetImport({referenceDate,onUse,onInspect,initialSource,onTemplate,template,meituanDate,period,aliasScope,aliasStores,onSourceChange,onAliasesLoaded,purpose='template',disabled=false,revenueContext}:{referenceDate?:string;onInspect?:(source:UploadSource)=>void;initialSource?:UploadSource;template?:import('../cloud/company/operating-model').OperatingTemplate;aliasScope?:{companyId:string;projectId:string;sheet:OperatingSheet};aliasStores?:{id:string;name:string}[];onSourceChange?:()=>void;onAliasesLoaded?:(aliases:ReadonlyMap<string,string>)=>void;period?:{date:string;sheet:OperatingSheet};meituanDate?:string;onTemplate?:(result:ReturnType<typeof inferOperatingTemplate>,source:string,candidateName?:string)=>void;onUse:(rows:unknown[][],headerRow:number,storeAliases?:ReadonlyMap<string,string>,dates?:string[],targets?:RevenueMonthlyTargets)=>void;purpose?:'template'|'data';disabled?:boolean;revenueContext?:RevenueColumnContext}){
+export default function OperatingSpreadsheetImport({reviewScope,referenceDate,onUse,onInspect,initialSource,onTemplate,template,meituanDate,period,aliasScope,aliasStores,onSourceChange,onAliasesLoaded,purpose='template',disabled=false,revenueContext}:{reviewScope?:string;referenceDate?:string;onInspect?:(source:UploadSource)=>void;initialSource?:UploadSource;template?:import('../cloud/company/operating-model').OperatingTemplate;aliasScope?:{companyId:string;projectId:string;sheet:OperatingSheet};aliasStores?:{id:string;name:string}[];onSourceChange?:()=>void;onAliasesLoaded?:(aliases:ReadonlyMap<string,string>)=>void;period?:{date:string;sheet:OperatingSheet};meituanDate?:string;onTemplate?:(result:ReturnType<typeof inferOperatingTemplate>,source:string,candidateName?:string)=>void;onUse:(rows:unknown[][],headerRow:number,storeAliases?:ReadonlyMap<string,string>,dates?:string[],targets?:RevenueMonthlyTargets,confirmedPlatformTotal?:boolean)=>void;purpose?:'template'|'data';disabled?:boolean;revenueContext?:RevenueColumnContext}){
  const [columnTask,setColumnTask]=useState<ColumnTask|null>(null);
+ const [scopeTask,setScopeTask]=useState<{matrix:unknown[][];header:number;dates?:string[]}|null>(null);
  const [monthTask,setMonthTask]=useState<{matrix:unknown[][];header:number;dates?:string[];months:string[];choice:string}|null>(null);
  const input=useRef<HTMLInputElement>(null),request=useRef(0);
- const refineImage=initialSource?.file&&period&&!template?initialSource.file:undefined;
+ const refineImage=initialSource?.file&&!initialSource.reviewEdited&&period&&!template?initialSource.file:undefined;
  const [sheets,setSheets]=useState<(OperatingFileSheet&{normalized?:boolean})[]>(initialSource?[{sheet:initialSource.tab,data:initialSource.rows}]:[]),[selected,setSelected]=useState(0),[header,setHeader]=useState(initialSource?.header??0),[name,setName]=useState(initialSource?.name||''),[loading,setLoading]=useState(false),[error,setError]=useState(''),[over,setOver]=useState(false);
  const [layout,setLayout]=useState<'auto'|'rows'|'store-columns'>('auto'),[dailyConfirmed,setDailyConfirmed]=useState(false),[layoutNote,setLayoutNote]=useState(''),[reviewRevision,setReviewRevision]=useState(0);
  const [manualHeader,setManualHeader]=useState<number>(),[adopted,setAdopted]=useState<number[]>([]),[candidateName,setCandidateName]=useState<string|null>(null);
@@ -53,7 +56,7 @@ export default function OperatingSpreadsheetImport({referenceDate,onUse,onInspec
   }catch(e){if(version===aliasVersion.current)setAliasError((e as Error).message);}
   finally{if(version===aliasVersion.current)setAliasBusy(false);}
  }
- function resetMatches(){setLayout('auto');setLayoutNote('');setDailyConfirmed(false);setColumnTask(null);setMonthTask(null);setIncludeOptional(false);onSourceChange?.();setDateChoice('');if(!aliasScope)setAliases(new Map());setMissing(null);}
+ function resetMatches(){setScopeTask(null);setLayout('auto');setLayoutNote('');setDailyConfirmed(false);setColumnTask(null);setMonthTask(null);setIncludeOptional(false);onSourceChange?.();setDateChoice('');if(!aliasScope)setAliases(new Map());setMissing(null);}
  const data=sheets[selected]?.data;
  const [dateChoice,setDateChoice]=useState('');
  const [includeOptional,setIncludeOptional]=useState(false);
@@ -65,6 +68,7 @@ export default function OperatingSpreadsheetImport({referenceDate,onUse,onInspec
   return layout==='store-columns'||layout==='auto'&&findRevenueStoreHeader(rows,{...revenueSource,storeAliases:revenueAliases},index)>=0;
  }
  const horizontalFile=!!data&&horizontal(data,header);
+ const platformConflict=data&&period&&purpose==='data'&&!onInspect?importPlatformConflict(data,header,period.sheet,template,sheets[selected]?.sheet):undefined;
  const detectedDates=useMemo(()=>{if(!data||!period||horizontalFile&&targetsOnly)return {facts:[],all:[]};try{if(horizontalFile){const all=revenueSourceDates(data,header,period.date);return {facts:all,all};}return {facts:sourceBusinessDates(data,header,period.sheet,period.date,false),all:sourceBusinessDates(data,header,period.sheet,period.date)};}catch{return {facts:[],all:[]};}},[data,header,horizontalFile,period?.sheet,period?.date]);
  const dates=includeOptional?detectedDates.all:detectedDates.facts;
  const sheetYear=/^(\d{2}|\d{4})年\d{1,2}月/.exec(sheets[selected]?.sheet||'')?.[1];
@@ -73,7 +77,7 @@ export default function OperatingSpreadsheetImport({referenceDate,onUse,onInspec
  function toggleScreenshot(){setMonthTask(null);setColumnTask(null);onSourceChange?.();if(screenshotOpen)setIncoming(null);setScreenshotOpen(open=>!open);}
  function drop(file:File|undefined){
   if(!file||disabled)return;
-  if(/\.(?:png|jpe?g|webp)$/i.test(file.name)||/^image\/(png|jpeg|webp)$/i.test(file.type)){
+  if(isReportVideo(file)||/\.(?:png|jpe?g|webp)$/i.test(file.name)||/^image\/(png|jpeg|webp)$/i.test(file.type)){
    ++request.current;setLoading(false);resetMatches();setSheets([]);setError('');setImageCandidate(null);setIncoming({file,sequence:++dropSequence.current});setScreenshotOpen(true);return;
   }
   void read(file);
@@ -94,10 +98,11 @@ export default function OperatingSpreadsheetImport({referenceDate,onUse,onInspec
    if(target.closest('dialog')!==element?.closest('dialog'))return;
    if(target.closest('input,textarea,[contenteditable="true"]')&&data.getData('text/plain'))return;
    const files=data.files.length?Array.from(data.files):Array.from(data.items).map(i=>i.kind==='file'?i.getAsFile():null).filter((f):f is File=>f!==null);
-   if(!files.some(f=>f.type.startsWith('image/')))return;
+   if(!files.some(f=>f.type.startsWith('image/')||isReportVideo(f)))return;
    event.preventDefault();
    const details=element?.closest('details');if(details)details.open=true;
    if(files.length!==1){setError('请一次粘贴一张截图。');return;}
+   if(isReportVideo(files[0])){drop(files[0]);return;}
    if(!screenshotTypes.includes(files[0].type)){setError('请粘贴 PNG、JPG 或 WebP 截图。');return;}
    acceptClipboardImage(files[0]);
   }
@@ -143,7 +148,7 @@ export default function OperatingSpreadsheetImport({referenceDate,onUse,onInspec
    const detected=layouts[i];
    try{
     const days=detected.horizontal?revenueSourceDates(sheet.data,detected.header,period.date):sourceBusinessDates(sheet.data,detected.header,period.sheet,period.date);
-    return days.some(d=>d.slice(0,7)===period.date.slice(0,7))?[i]:[];
+    return detected.matches>0&&!importPlatformConflict(sheet.data,detected.header,period.sheet,template,sheet.sheet)&&days.some(d=>d.slice(0,7)===period.date.slice(0,7))?[i]:[];
    }catch{return [];}
   }):[];
   const max=Math.max(...layouts.map(l=>l.matches));
@@ -152,7 +157,12 @@ export default function OperatingSpreadsheetImport({referenceDate,onUse,onInspec
    const row=item.data[layouts[i].header];
    return row?.filter(v=>String(v??'').trim()).length>=2&&item.data.slice(layouts[i].header+1).some(r=>r.some(v=>typeof v==='number'||/^[-+]?\d[\d,.]*%?$/.test(String(v??'').trim())))?[i]:[];
   }):[];
-  const index=candidates.find(i=>matches.includes(i))??candidates[0]??matches[0]??likely[0]??0;
+  const inMonth=matches.sort((a,b)=>layouts[b].matches-layouts[a].matches);
+  const routeMonth=onInspect&&referenceDate?likely.filter(i=>{
+   const dates=groupSourceRows(result[i].data,layouts[i].header,undefined,referenceDate);
+   return [...dates.keys()].some(d=>d.slice(0,7)===referenceDate.slice(0,7));
+  }).sort((a,b)=>layouts[b].matches-layouts[a].matches):[];
+  const index=inMonth[0]??routeMonth[0]??candidates[0]??likely[0]??0;
   setName(file.name);setSheets(result);setSelected(index);setHeader(layouts[index].header);
  }catch(e){setError((e as Error).message);}finally{if(id===request.current)setLoading(false);}}
  function guess(rows:unknown[][]){
@@ -164,7 +174,7 @@ export default function OperatingSpreadsheetImport({referenceDate,onUse,onInspec
   return {rows:matrix,header};
  }
  function useRows(matrix:unknown[][],row:number,confirmed:boolean,sourceDates?:string[],targetMonth?:string){
-  setColumnTask(null);setMonthTask(null);
+  setScopeTask(null);setColumnTask(null);setMonthTask(null);
   if(revenueSource&&horizontal(matrix,row)){
    if(aliasBusy)throw Error('正在读取或保存门店对应，请稍候再预览。');
    try{
@@ -205,7 +215,10 @@ export default function OperatingSpreadsheetImport({referenceDate,onUse,onInspec
   if(aliasBusy)throw Error('正在读取或保存门店对应，请稍候再预览。');
   if(!sourceDates&&period){const detected=sourceBusinessDates(matrix,row,period.sheet,period.date);if(detected.length)sourceDates=detected;}
   const useDates=sourceDates?.length?sourceDates:undefined;
-  try{onUse(matrix,row,aliases,useDates);setMissing(null);setLayoutNote('');}catch(e){if(e instanceof StoreMappingNeeded)setMissing(e);throw e;}
+  try{onUse(matrix,row,aliases,useDates);setMissing(null);setLayoutNote('');setScopeTask(null);}catch(e){
+   if(e instanceof PlatformScopeNeeded){setScopeTask({matrix,header:row,dates:useDates??(period?[period.date]:undefined)});return;}
+   if(e instanceof StoreMappingNeeded)setMissing(e);throw e;
+  }
  }
  function use(){try{
   if(onInspect&&data){onInspect({name,tab:sheets[selected].sheet,rows:data,header:displayedHeader,image:false});return;}
@@ -213,14 +226,16 @@ export default function OperatingSpreadsheetImport({referenceDate,onUse,onInspec
    if(!proposedName.trim())throw Error('请填写候选模板名称。');
    onTemplate(candidate.result,sheets[selected].sheet,proposedName.trim());setAdopted(list=>[...list,selected]);setError('');return;
   }
+  if(platformConflict)throw Error(platformConflict);
+  if(yearConflict)throw Error('工作表名称与日期列年份冲突，请核对并更正原表后重新选择文件。');
   useRows(sheets[selected].data,header,!horizontalFile||dailyConfirmed,period?(picked==='all'?dates:horizontalFile&&!dates.length?undefined:[picked]):undefined);setError('');if(purpose==='template')setSheets([]);}catch(e){setError((e as Error).message);}}
  return <section className={'op-file-import '+(over?'dragging':'')} aria-label={purpose==='template'?'从表格生成模板':'导入本次填报表格'} onDragOver={e=>{e.preventDefault();if(!disabled)setOver(true);}} onDragLeave={()=>setOver(false)} onDrop={e=>{e.preventDefault();setOver(false);if(e.dataTransfer.files.length!==1){setError('每次请选择一份表格或一张截图。');return;}drop(e.dataTransfer.files[0]);}}>
   {purpose==='data'&&revenueContext&&<div className="op-import-layout"><label>原表怎么排<select aria-label="总业绩源表方向" disabled={disabled||loading} value={layout} onChange={e=>{resetMatches();setLayout(e.target.value as typeof layout);setDailyConfirmed(false);setLayoutNote('');setReviewRevision(v=>v+1);}}><option value="auto">自动识别</option><option value="rows">每个门店一行（普通表）</option><option value="store-columns">门店横着排，日期竖着排（总业绩表）</option></select></label>{(horizontalFile||layout==='store-columns')&&<p className="op-note">{targetsOnly?'仅提取各门店的月目标，日业绩在总业绩页录入。':'已选用横排门店格式。按原表日期读取各店业绩，同表的月目标可一起预览。'}</p>}</div>}
-  <div className="op-file-import-title"><FileSpreadsheet size={22}/><div><strong>{onInspect?'选择或拖入项目报表':purpose==='template'?'拖入已有 Excel，生成指标草案':'拖入同格式表格，预览本次数据'}</strong><p>{purpose==='template'?'表格可直接拖入；也可拖入截图或选择下方截图识别。':'按原表业务日期生成预览，可一起导入多天。'} xlsx / csv / tsv / txt，最大5MiB。</p></div><button className="op-button" type="button" data-import-reading={loading||undefined} disabled={disabled||loading} onClick={()=>input.current?.click()}><Upload size={16}/>{loading?'正在读取表格…':onInspect?'选择 Excel 或截图':'选择表格'}</button><input ref={input} hidden type="file" aria-label="上传汇报表格" accept={onInspect?'.xlsx,.csv,.tsv,.txt,image/png,image/jpeg,image/webp':'.xlsx,.csv,.tsv,.txt'} disabled={disabled||loading} onChange={e=>{if(onInspect)drop(e.target.files?.[0]);else void read(e.target.files?.[0]);e.target.value='';}}/></div>
+  <div className="op-file-import-title"><FileSpreadsheet size={22}/><div><strong>{onInspect?'选择或拖入项目报表':purpose==='template'?'拖入已有 Excel，生成指标草案':'拖入同格式表格，预览本次数据'}</strong><p>{purpose==='template'?'表格可直接拖入；也可拖入截图或选择下方截图识别。':'按原表业务日期生成预览，可一起导入多天。'} xlsx / csv / tsv / txt，最大5MiB。</p></div><button className="op-button" type="button" data-import-reading={loading||undefined} disabled={disabled||loading} onClick={()=>input.current?.click()}><Upload size={16}/>{loading?'正在读取表格…':onInspect?'选择表格、截图或录屏':'选择表格'}</button><input ref={input} hidden type="file" aria-label="上传汇报表格" accept={onInspect?'.xlsx,.csv,.tsv,.txt,'+reportMediaAccept:'.xlsx,.csv,.tsv,.txt'} disabled={disabled||loading} onChange={e=>{if(onInspect)drop(e.target.files?.[0]);else void read(e.target.files?.[0]);e.target.value='';}}/></div>
   <div className="op-clipboard-actions"><button type="button" className="op-button op-image-toggle" aria-expanded={screenshotOpen} aria-controls={screenshotId} disabled={disabled} onClick={toggleScreenshot}><ImagePlus size={16}/>{onInspect?'从截图识别报表':purpose==='template'?'用报表截图生成':'用截图导入数据'}</button><button className="op-button" type="button" disabled={disabled||loading} onClick={()=>void pasteFromClipboard()}><ClipboardPaste size={16}/>粘贴截图</button><small>也可直接按 Ctrl+V / ⌘V</small></div>
-  <div id={screenshotId} hidden={!screenshotOpen} onChangeCapture={()=>{setMonthTask(null);setColumnTask(null);setImageCandidate(null);}} onClickCapture={e=>{if((e.target as Element).closest('button')){setMonthTask(null);setColumnTask(null);setImageCandidate(null);onSourceChange?.();}}}>
-   {screenshotOpen&&<OperatingScreenshotImport autoRecognize={!!refineImage&&incoming?.file===refineImage} routing={!!onInspect} key={incoming?.sequence||0} meituanDate={meituanDate} dailySheet={targetsOnly?'targets':revenueSource?'revenue':period?.sheet} dailyTemplate={revenueSource?undefined:template} dailyStores={revenueSource?.stores??aliasStores} dailyReference={period&&(revenueSource||period.sheet==='douyin'||period.sheet==='meituan'||template)?period.date:referenceDate} douyinStoreDate={period?.sheet==='douyin-stores'?period.date:undefined} initialFile={incoming?.file} onSelect={()=>{++request.current;setLoading(false);setSheets([]);resetMatches();setImageCandidate(null);}} purpose={purpose} disabled={disabled} confirmationKey={String(reviewRevision)} confirmationNote={revenueSource&&layout!=='rows'?(targetsOnly?'我已核对月份、门店名称和月目标金额。':'我已确认各日期行填写当日业绩，并核对了原图中的月目标。'):''} onUse={(matrix,row,source,file)=>{
-    if(onInspect)onInspect({name:source,tab:source,rows:matrix,header:row,image:true,file});
+  <div id={screenshotId} hidden={!screenshotOpen} onChangeCapture={()=>{setScopeTask(null);setMonthTask(null);setColumnTask(null);setImageCandidate(null);}} onClickCapture={e=>{if((e.target as Element).closest('button')){setScopeTask(null);setMonthTask(null);setColumnTask(null);setImageCandidate(null);onSourceChange?.();}}}>
+   {screenshotOpen&&<OperatingScreenshotImport reviewScope={reviewScope&&JSON.stringify([reviewScope,period?.sheet??'route',period?.sheet.endsWith('-stores')?period.date:(period?.date||referenceDate)?.slice(0,4)])} autoRecognize={!!refineImage&&incoming?.file===refineImage} routing={!!onInspect} key={incoming?.sequence||0} meituanDate={meituanDate} dailySheet={targetsOnly?'targets':revenueSource?'revenue':period?.sheet} dailyTemplate={revenueSource?undefined:template} dailyStores={revenueSource?.stores??aliasStores} dailyReference={period&&(revenueSource||period.sheet==='douyin'||period.sheet==='meituan'||template)?period.date:referenceDate} douyinStoreDate={period?.sheet==='douyin-stores'?period.date:undefined} initialFile={incoming?.file} onSelect={()=>{++request.current;setLoading(false);setSheets([]);resetMatches();setImageCandidate(null);}} purpose={purpose} disabled={disabled} confirmationKey={String(reviewRevision)} confirmationNote={revenueSource&&layout!=='rows'?(targetsOnly?'我已核对月份、门店名称和月目标金额。':'我已确认各日期行填写当日业绩，并核对了原图中的月目标。'):''} onUse={(matrix,row,source,file,reviewEdited)=>{
+    if(onInspect)onInspect({name:source,tab:source,rows:matrix,header:row,image:true,file,reviewEdited});
     else if(onTemplate){const result=inferScreenshotTemplate(matrix,row);setImageCandidate({result,source,name:(result.suggestedName||source.replace(/\.(png|jpe?g|webp)$/i,'')||'报表截图').slice(0,60)});}
     else useRows(matrix,row,true);
     setError('');
@@ -229,15 +244,19 @@ export default function OperatingSpreadsheetImport({referenceDate,onUse,onInspec
   {imageCandidate&&onTemplate&&<section className="op-template-designer" aria-label="已核对截图的指标草案"><h4>截图指标草案</h4><p>{imageCandidate.source} · {imageCandidate.result.analysis.fields.map(f=>f.label).join('、')}</p>{imageCandidate.result.notes.map(note=><p className="op-muted" key={note}>{note}</p>)}
    <label>截图模板名称<input maxLength={60} value={imageCandidate.name} disabled={disabled} onChange={e=>{setImageCandidate({...imageCandidate,name:e.target.value});setError('');}}/></label>
    <button type="button" className="op-button" disabled={disabled||!imageCandidate.name.trim()} onClick={()=>{try{onTemplate(imageCandidate.result,imageCandidate.source,imageCandidate.name.trim());setImageCandidate(null);setError('');}catch(e){setError((e as Error).message);}}}>将截图字段加入指标方案</button></section>}
-  {initialSource?.image&&data&&<p className="op-note">已带入刚才识别的原表。请对照截图核对业务日期、单位和数字，再读取到填报预览。{initialSource.file&&<button type="button" className="co-text" onClick={()=>drop(initialSource.file)}>用本表规则复核原截图</button>}</p>}{data&&sheets[selected]?.normalized&&<p className="op-note">已按原表业务日期整理，请核对下方的日期和指标。</p>}{data&&detectedDates.all.length>detectedDates.facts.length&&<label className="op-note"><input type="checkbox" checked={includeOptional} onChange={e=>{setColumnTask(null);setIncludeOptional(e.target.checked);setDateChoice('');onSourceChange?.();}}/> 包含另外 {detectedDates.all.length-detectedDates.facts.length} 个仅有选填指标、交易字段全空的日期</label>}{data&&dates.length>0&&<p className="op-note">工作表「{sheets[selected].sheet}」 · 原表业务日期 {dates[0]} 至 {dates.at(-1)}，共 {dates.length} 天。{yearConflict&&<strong>工作表名称与日期列年份不同，将按日期列保存，请核对年份。</strong>}</p>}{data&&<div className="op-import-preview" onChangeCapture={()=>setMonthTask(null)}><div className="op-panel-title"><strong>{name}</strong><button className="op-close" aria-label="清除待导入表格" type="button" onClick={()=>{resetMatches();setSheets([]);setError('');setLayoutNote('');}}><X size={16}/></button></div><div className="op-config-grid"><label>工作表<select value={selected} onChange={e=>{const index=Number(e.target.value);setSelected(index);resetMatches();setError('');setManualHeader(undefined);setCandidateName(null);setHeader(guess(sheets[index].data));setDailyConfirmed(false);}}>{sheets.map((s,i)=><option value={i} key={i}>{s.sheet}</option>)}</select></label><label>表头在哪一行<select aria-label="表头行" value={displayedHeader} onChange={e=>{resetMatches();setError('');setManualHeader(Number(e.target.value));setCandidateName(null);setHeader(Number(e.target.value));setDailyConfirmed(false);}}>{data.slice(0,30).map((row,i)=><option key={i} value={i}>第{i+1}行 · {row.map(v=>String(v??'')).filter(Boolean).join(' / ').slice(0,90)}</option>)}</select></label></div><div className="op-table-wrap"><table className="op-table"><thead><tr>{data[displayedHeader]?.map((cell,i)=><th key={i}>{String(cell??'')}</th>)}</tr></thead><tbody>{data.slice(displayedHeader+1,displayedHeader+4).map((row,i)=><tr key={i}>{row.map((cell,j)=><td key={j}>{cell instanceof Date?cell.toISOString().slice(0,10):String(cell??'')}</td>)}</tr>)}</tbody></table></div>{candidate?.result&&<section aria-label="自动识别的指标草案"><h4>此工作表的指标草案</h4><label>候选模板名称<input value={proposedName} maxLength={60} disabled={disabled||adopted.includes(selected)} onChange={e=>{setCandidateName(e.target.value);setError('');}}/></label><p>填报字段：{candidate.result.analysis.fields.map(f=>f.label).join('、')||'未识别到'}。</p>
+  {initialSource?.image&&data&&<p className="op-note">已带入刚才识别的原表。请对照截图核对业务日期、单位和数字，再读取到填报预览。{initialSource.file&&<button type="button" className="co-text" onClick={()=>drop(initialSource.file)}>用本表规则复核原截图</button>}</p>}{data&&sheets[selected]?.normalized&&<p className="op-note">已按原表业务日期整理，请核对下方的日期和指标。</p>}{data&&detectedDates.all.length>detectedDates.facts.length&&<label className="op-note"><input type="checkbox" checked={includeOptional} onChange={e=>{setColumnTask(null);setIncludeOptional(e.target.checked);setDateChoice('');onSourceChange?.();}}/> 包含另外 {detectedDates.all.length-detectedDates.facts.length} 个仅有选填指标、交易字段全空的日期</label>}{data&&dates.length>0&&<p className="op-note">工作表「{sheets[selected].sheet}」 · 原表业务日期 {dates[0]} 至 {dates.at(-1)}，共 {dates.length} 天。{yearConflict&&<strong>工作表名称与日期列年份冲突，请先核对并更正原表，再重新选择文件。</strong>}</p>}{data&&<div className="op-import-preview" onChangeCapture={()=>setMonthTask(null)}><div className="op-panel-title"><strong>{name}</strong><button className="op-close" aria-label="清除待导入表格" type="button" onClick={()=>{resetMatches();setSheets([]);setError('');setLayoutNote('');}}><X size={16}/></button></div><div className="op-config-grid"><label>工作表<select value={selected} onChange={e=>{const index=Number(e.target.value);setSelected(index);resetMatches();setError('');setManualHeader(undefined);setCandidateName(null);setHeader(guess(sheets[index].data));setDailyConfirmed(false);}}>{sheets.map((s,i)=><option value={i} key={i}>{s.sheet}</option>)}</select></label><label>表头在哪一行<select aria-label="表头行" value={displayedHeader} onChange={e=>{resetMatches();setError('');setManualHeader(Number(e.target.value));setCandidateName(null);setHeader(Number(e.target.value));setDailyConfirmed(false);}}>{data.slice(0,30).map((row,i)=><option key={i} value={i}>第{i+1}行 · {row.map(v=>String(v??'')).filter(Boolean).join(' / ').slice(0,90)}</option>)}</select></label></div><div className="op-table-wrap"><table className="op-table"><thead><tr>{data[displayedHeader]?.map((cell,i)=><th key={i}>{String(cell??'')}</th>)}</tr></thead><tbody>{data.slice(displayedHeader+1,displayedHeader+4).map((row,i)=><tr key={i}>{row.map((cell,j)=><td key={j}>{cell instanceof Date?cell.toISOString().slice(0,10):String(cell??'')}</td>)}</tr>)}</tbody></table></div>{candidate?.result&&<section aria-label="自动识别的指标草案"><h4>此工作表的指标草案</h4><label>候选模板名称<input value={proposedName} maxLength={60} disabled={disabled||adopted.includes(selected)} onChange={e=>{setCandidateName(e.target.value);setError('');}}/></label><p>填报字段：{candidate.result.analysis.fields.map(f=>f.label).join('、')||'未识别到'}。</p>
    {!!candidate.result.metrics.length&&<p>计算指标：{candidate.result.metrics.map(m=>m.label).join('、')}。</p>}
    {candidate.result.analysis.dimension&&<p>按{candidate.result.analysis.dimension.label}分行：{candidate.result.analysis.dimension.names.join('、')}。</p>}
    {candidate.result.notes.map(note=><p className="op-muted" key={note}>{note}</p>)}</section>}
    {candidate?.error&&<p className="co-error" role="alert">{candidate.error} 可改选工作表或表头行。</p>}
-   {!onTemplate&&<p className="op-muted">请核对表头、日期和范围，再读取到预览。</p>}
-   {period&&!(horizontalFile&&targetsOnly)&&<label className="op-note">按原表业务日期导入{dates.length?<select aria-label="导入业务日期" value={picked} onChange={e=>{setColumnTask(null);setDateChoice(e.target.value);setDailyConfirmed(false);}}>{dates.length>1&&<option value="all">全部 {dates.length} 个业务日期</option>}{dates.map(d=><option key={d}>{d}</option>)}</select>:<input aria-label="确认表格业务日期" type="date" value={picked} onChange={e=>{setColumnTask(null);setDateChoice(e.target.value);}}/>}<small>页面所选日期为 {period.date}。{dates.length?'按上面选择的原表日期生成预览。':'表里没有可确定的日期，请核对或修改。'}</small></label>}
-   {adopted.includes(selected)&&<p className="op-note" role="status">此工作表已核对，可在下方查看对应模板，或选择另一张工作表继续。</p>}{horizontalFile&&<label className="op-daily-confirm"><input type="checkbox" checked={dailyConfirmed} disabled={disabled} onChange={e=>setDailyConfirmed(e.target.checked)}/>{targetsOnly?'我已核对月份、门店名称和月目标金额。':'我已确认所选日期行填写当日业绩，并核对了表中的月目标'}</label>}<button className="op-button" type="button" disabled={disabled||aliasBusy||horizontalFile&&!dailyConfirmed||!!onTemplate&&(!candidate?.result?.analysis.fields.length||adopted.includes(selected))} onClick={use}>{onInspect?'识别这张表的用途':onTemplate?'将此工作表加入指标方案':purpose==='template'?'识别这些字段':'读取到填报预览'}</button></div>}
-  {columnTask&&aliasScope&&<OperatingColumnReview task={columnTask} scope={aliasScope} disabled={disabled} onInvalidate={()=>onSourceChange?.()} onPreview={matrix=>commitRows(matrix,columnTask.header,columnTask.confirmed,columnTask.dates)}/>}
+   {platformConflict&&<p className="co-error" role="alert">{platformConflict}</p>}
+   {!platformConflict&&!onTemplate&&<p className="op-muted">请核对表头、日期和范围，再读取到预览。</p>}
+   {period&&!(horizontalFile&&targetsOnly)&&<label className="op-note">按原表业务日期导入{dates.length?<select aria-label="导入业务日期" value={picked} onChange={e=>{setScopeTask(null);setColumnTask(null);setDateChoice(e.target.value);setDailyConfirmed(false);}}>{dates.length>1&&<option value="all">全部 {dates.length} 个业务日期</option>}{dates.map(d=><option key={d}>{d}</option>)}</select>:<input aria-label="确认表格业务日期" type="date" value={picked} onChange={e=>{setScopeTask(null);setColumnTask(null);setDateChoice(e.target.value);}}/>}<small>页面所选日期为 {period.date}。{dates.length?'按上面选择的原表日期生成预览。':'表里没有可确定的日期，请核对或修改。'}</small></label>}
+   {adopted.includes(selected)&&<p className="op-note" role="status">此工作表已核对，可在下方查看对应模板，或选择另一张工作表继续。</p>}{horizontalFile&&<label className="op-daily-confirm"><input type="checkbox" checked={dailyConfirmed} disabled={disabled} onChange={e=>setDailyConfirmed(e.target.checked)}/>{targetsOnly?'我已核对月份、门店名称和月目标金额。':'我已确认所选日期行填写当日业绩，并核对了表中的月目标'}</label>}<button className="op-button" type="button" disabled={disabled||!!platformConflict||!!yearConflict||aliasBusy||horizontalFile&&!dailyConfirmed||!!onTemplate&&(!candidate?.result?.analysis.fields.length||adopted.includes(selected))} onClick={use}>{onInspect?'识别这张表的用途':onTemplate?'将此工作表加入指标方案':purpose==='template'?'识别这些字段':'读取到填报预览'}</button></div>}
+  {columnTask&&aliasScope&&<OperatingColumnReview task={columnTask} scope={aliasScope} disabled={disabled} onInvalidate={()=>{setScopeTask(null);onSourceChange?.();}} onPreview={matrix=>commitRows(matrix,columnTask.header,columnTask.confirmed,columnTask.dates)}/>}
+  {scopeTask&&<section className="op-note" aria-label="确认数据范围"><strong>这些数字是哪一层的业绩？</strong><p>图里没有门店列。若每行都是所有门店在这个平台的合计，可按全平台继续；若是单店数据，请补上门店名称。</p>
+   <button type="button" className="op-button" disabled={disabled} onClick={()=>{try{onUse(scopeTask.matrix,scopeTask.header,aliases,scopeTask.dates,undefined,true);setScopeTask(null);setError('');}catch(e){setError((e as Error).message);}}}>按全平台数据预览</button>
+  </section>}
   {monthTask&&<div className="op-config-grid" role="group" aria-label="核对目标月份">
    <label>{monthTask.months.length?'原表跨月，请选择月目标所属月份':'原表没有明确月份，请填写月目标所属月份'}
     {monthTask.months.length?<select aria-label="月目标所属月份" value={monthTask.choice} onChange={e=>setMonthTask({...monthTask,choice:e.target.value})}><option value="">请选择月份</option>{monthTask.months.map(month=><option key={month}>{month}</option>)}</select>

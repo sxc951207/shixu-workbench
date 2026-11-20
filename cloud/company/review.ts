@@ -1,3 +1,6 @@
+import {isDeepStrictEqual} from 'node:util';
+import {hasPendingApproval,isCurrentApprover} from './approval-flow.ts';
+import {legacyCompanyResponse} from './legacy-response.ts';
 import {activeProjects} from './model.ts';
 import type{Actor,Company,Member,Project,ProjectHead,PeriodReport,ReportHead,ReportIndex}from'./model.ts';
 import type{CompanyTx}from'./store.ts';import type{OperatingHead,OperatingIndex,OperatingRecord}from'./operating-model.ts';
@@ -5,7 +8,7 @@ import type{CompanyReviewItem,CompanyReviewCursor,CompanyReviewPage,CompanyRevie
 import{WorkbenchError,todayShanghai}from'../../lib/workbench/domain.ts';import{digest,loadCompany,projectAt,canConfirmProgress}from'./core.ts';import{companyAbility,projectSubject}from'./policy.ts';import{operatingHead,operatingId,operatingIndexKey,operatingReviewerLogin}from'./operating.ts';import{reportIndexKey,canReviewDaily}from'./reports.ts';
 const MAX_CANDIDATES=20,MAX_INDEXES=4;
 function fail(message:string,status=400):never{throw new WorkbenchError(message,status);}
-function reviewerProjects(actor:Actor,member:Member|null|undefined,c:Company){const supervisor=member?.roles.includes('supervisor'),leader=member?.roles.includes('leader');const projects=activeProjects(c).filter(p=>actor.owner||supervisor&&p.reviewerLogin===member!.login||leader&&p.progressLeaderLogin===member!.login);if(!actor.owner&&!supervisor&&!projects.length)fail('没有该项目待确认权限',403);return projects;}
+function reviewerProjects(actor:Actor,member:Member|null|undefined,c:Company){const supervisor=member?.roles.includes('supervisor'),leader=member?.roles.includes('leader');const projects=activeProjects(c).filter(p=>actor.owner||supervisor&&p.reviewerLogin===member!.login||leader&&p.progressLeaderLogin===member!.login||!!member&&(p.approvalChain?.includes(member.login)||isCurrentApprover(actor,c,p)||hasPendingApproval(c,p.id,member.login)));if(!actor.owner&&!supervisor&&!projects.length)fail('没有该项目待确认权限',403);return projects;}
 function canReview(actor:Actor,c:Company,p:ProjectHead,status:string,submittedBy:string,publishedVersion=0){const uid=actor.owner?'owner':actor.login!;return status==='submitted'&&submittedBy!==uid&&companyAbility(actor,c).can('review',projectSubject({...p,companyId:c.id,status,submittedBy,published:publishedVersion?{version:publishedVersion}:null}as Project));}
 function month(value:unknown){if(value===undefined||value==='')return'';if(typeof value!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(value)||value<'1970-01'||value>'2100-12')fail('待确认月份无效');return value;}
 function recordDate(value:string|null,fallback:string){const stamp=value||fallback,date=new Date(stamp);if(!Number.isFinite(date.getTime()))fail('待确认记录时间无法核对');return todayShanghai(date);}
@@ -24,8 +27,17 @@ export async function executeCompanyReview(tx:CompanyTx,actor:Actor,b:any):Promi
   const proposals=b.cursor?0:configurationProjects().projects.filter(p=>p.pendingIndicatorProposal).length;
   return {count:page.items.length+proposals,nextCursor:page.nextCursor,companyRevision:c.revision};
  }
+ if(b.action==='review.item'){
+  const operating=b.type==='operating',id=b.id;
+  if(typeof id!=='string'||!(operating?/^op_[a-f0-9]{32}$/:/^pr_[a-f0-9]{32}$/).test(id))fail('待确认记录编号无效');
+  const item=await tx.get<OperatingRecord|PeriodReport>(id);
+  if(!item||item.id!==id||item.companyId!==c.id||!allowed.has(item.projectId)||!isCurrentApprover(actor,c,item))fail('记录已处理或不归你确认',403);
+  if('sheet' in item && operating)return {record:item};
+  if('kind' in item && item.kind===b.type)return {report:item};
+  fail('待确认记录类型不匹配');
+ }
  if(b.action==='review.project'){
-  const p=await projectAt(tx,c,b.id),head=allowed.get(p.id);if(!head||!canConfirmProgress(actor,c,p))fail('没有该项目确认权限或已不在待确认状态',403);if(p.version!==head.version||p.status!==head.status||p.submittedBy!==head.submittedBy)fail('待确认项目与目录不一致，请刷新',409);return{project:p,companyRevision:c.revision};
+  const p=await projectAt(tx,c,b.id),head=allowed.get(p.id);if(!head||!canConfirmProgress(actor,c,p))fail('没有该项目确认权限或已不在待确认状态',403);if(p.version!==head.version||p.status!==head.status||p.submittedBy!==head.submittedBy||!isDeepStrictEqual(p.approvalFlow,head.approvalFlow))fail('待确认项目与目录不一致，请刷新',409);return legacyCompanyResponse({project:p,companyRevision:c.revision});
  }
  if(b.action!=='review.list')fail('不支持的待确认读取');
  return readQueue(b);
@@ -47,24 +59,24 @@ export async function executeCompanyReview(tx:CompanyTx,actor:Actor,b:any):Promi
   if(current.type==='project')heads=projects.filter(p=>scopes.has(p.id)&&canConfirmProgress(actor,c,p));
   else if(current.type==='operating'){
    const index=await tx.get<OperatingIndex>(operatingIndexKey(c.id,current.month));checkIndex(index,c.operatingMonths?.[current.month]);scanned.indexes++;
-   heads=index!.items.filter(h=>scopes.has(h.projectId)&&h.status==='submitted').sort((a,b)=>b.date.localeCompare(a.date)||a.id.localeCompare(b.id));
+   heads=index!.items.filter(h=>scopes.has(h.projectId)&&h.status==='submitted'&&(!h.approvalFlow||isCurrentApprover(actor,c,h))).sort((a,b)=>b.date.localeCompare(a.date)||a.id.localeCompare(b.id));
   }else{
    const index=await tx.get<ReportIndex>(reportIndexKey(c.id,current.month));checkIndex(index,c.reportMonths?.[current.month]);scanned.indexes++;
-   heads=index!.items.filter(h=>scopes.has(h.projectId)&&(!search||[h.submittedBy,names.get(h.submittedBy)||''].some(value=>value.toLowerCase().includes(search)))&&(type==='all'||type===h.kind)&&(h.kind==='daily'?canReviewDaily(actor,c,allowed.get(h.projectId)!,h):canReview(actor,c,allowed.get(h.projectId)!,h.status,h.submittedBy,h.publishedVersion))).sort((a,b)=>b.start.localeCompare(a.start)||a.id.localeCompare(b.id));
+   heads=index!.items.filter(h=>scopes.has(h.projectId)&&(!search||[h.submittedBy,names.get(h.submittedBy)||''].some(value=>value.toLowerCase().includes(search)))&&(type==='all'||type===h.kind)&&(h.approvalFlow?isCurrentApprover(actor,c,h):h.kind==='daily'?canReviewDaily(actor,c,allowed.get(h.projectId)!,h):canReview(actor,c,allowed.get(h.projectId)!,h.status,h.submittedBy,h.publishedVersion))).sort((a,b)=>b.start.localeCompare(a.start)||a.id.localeCompare(b.id));
   }
   if(offset>heads.length)fail('待确认游标与目录不一致，请刷新');
   while(offset<heads.length&&scanned.candidates<MAX_CANDIDATES){const head=heads[offset++];scanned.candidates++;
    if(current.type==='project'){
-    const h=head as ProjectHead,p=await projectAt(tx,c,h.id);if(p.version!==h.version||p.status!==h.status||p.submittedBy!==h.submittedBy)fail('待确认项目与目录不一致，请刷新');const date=recordDate(p.submittedAt||null,p.updatedAt);if(selectedMonth&&date.slice(0,7)!==selectedMonth)continue;
-    items.push({type:'project',id:p.id,projectId:p.id,projectName:p.name,version:p.version,submittedBy:p.submittedBy,submittedAt:p.submittedAt||null,date,amendment:!!p.published});
+    const h=head as ProjectHead,p=await projectAt(tx,c,h.id);if(p.version!==h.version||p.status!==h.status||p.submittedBy!==h.submittedBy||!isDeepStrictEqual(p.approvalFlow,h.approvalFlow))fail('待确认项目与目录不一致，请刷新');const date=recordDate(p.submittedAt||null,p.updatedAt);if(selectedMonth&&date.slice(0,7)!==selectedMonth)continue;
+    items.push({...(p.approvalFlow?{approvalFlow:p.approvalFlow}:{}),type:'project',id:p.id,projectId:p.id,projectName:p.name,version:p.version,submittedBy:p.submittedBy,submittedAt:p.submittedAt||null,date,amendment:!!p.published});
    }else if(current.type==='operating'){
-    const h=head as OperatingHead,r=await tx.get<OperatingRecord>(h.id),p=allowed.get(h.projectId)!;if(!r||r.companyId!==c.id||r.projectId!==p.id||r.date.slice(0,7)!==current.month||r.id!==operatingId(c.id,p.id,r.sheet,r.date)||Object.entries(operatingHead(r)).some(([key,value])=>h[key as keyof OperatingHead]!==value))fail('待确认经营记录与目录不一致，请刷新');
-    if(!actor.owner&&!member?.roles.includes('supervisor')||operatingReviewerLogin(c,p as Project,r,uid)!==uid)continue;
-    items.push({type:'operating',id:r.id,projectId:p.id,projectName:p.name,version:r.version,submittedBy:r.submittedBy,submittedAt:r.submittedAt,date:r.date,sheet:r.sheet,...(r.submissionBatchId?{submissionBatchId:r.submissionBatchId}:{}),...(r.template?{name:r.template.name}:{}),amendment:!!r.published});
+    const h=head as OperatingHead,r=await tx.get<OperatingRecord>(h.id),p=allowed.get(h.projectId)!;if(!r||r.companyId!==c.id||r.projectId!==p.id||r.date.slice(0,7)!==current.month||r.id!==operatingId(c.id,p.id,r.sheet,r.date)||!isDeepStrictEqual(operatingHead(r),h))fail('待确认经营记录与目录不一致，请刷新');
+    if(r.approvalFlow?!isCurrentApprover(actor,c,r):(!actor.owner&&!member?.roles.includes('supervisor')||operatingReviewerLogin(c,p as Project,r,uid)!==uid))continue;
+    items.push({...(r.approvalFlow?{approvalFlow:r.approvalFlow}:{}),type:'operating',id:r.id,projectId:p.id,projectName:p.name,version:r.version,submittedBy:r.submittedBy,submittedAt:r.submittedAt,date:r.date,sheet:r.sheet,...(r.submissionBatchId?{submissionBatchId:r.submissionBatchId}:{}),...(r.template?{name:r.template.name}:{}),amendment:!!r.published});
    }else{
-    const h=head as ReportHead,r=await tx.get<PeriodReport>(h.id),p=allowed.get(h.projectId)!;if(!r||r.companyId!==c.id||r.projectId!==p.id||r.start.slice(0,7)!==current.month||(['id','projectId','kind','start','end','status','version','publishedVersion','submittedBy']as const).some(key=>r[key]!==h[key]))fail('待确认文字报表与目录不一致，请刷新');
+    const h=head as ReportHead,r=await tx.get<PeriodReport>(h.id),p=allowed.get(h.projectId)!;if(!r||r.companyId!==c.id||r.projectId!==p.id||r.start.slice(0,7)!==current.month||!isDeepStrictEqual(h.approvalFlow,r.approvalFlow)||(['id','projectId','kind','start','end','status','version','publishedVersion','submittedBy']as const).some(key=>r[key]!==h[key]))fail('待确认文字报表与目录不一致，请刷新');
     const daily=r.kind==='daily'?{submittedName:r.submittedName||names.get(r.submittedBy)||r.submittedBy,excerpt:(r.achievement.trim().match(/^[^。！？\r\n]*[。！？]?/u)?.[0]||'').slice(0,96)}:{};
-    items.push({...daily,type:r.kind as CompanyReviewType,id:r.id,projectId:p.id,projectName:p.name,version:r.version,submittedBy:r.submittedBy,submittedAt:r.submittedAt,date:r.start,start:r.start,end:r.end,amendment:!!r.published});
+    items.push({...daily,...(r.approvalFlow?{approvalFlow:r.approvalFlow}:{}),type:r.kind as CompanyReviewType,id:r.id,projectId:p.id,projectName:p.name,version:r.version,submittedBy:r.submittedBy,submittedAt:r.submittedAt,date:r.start,start:r.start,end:r.end,amendment:!!r.published});
    }
   }
   if(offset>=heads.length){stage++;offset=0;}

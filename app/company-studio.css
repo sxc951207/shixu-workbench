@@ -13,12 +13,12 @@ html[data-company-theme="light"] {
   --company-shadow: 0 1px 2px #142a4410, 0 5px 18px -12px #223d7033;
 }
 html[data-company-theme="dark"] {
-  --company-bg: #111a2a;
-  --company-card: #1b273a;
-  --company-panel: #202f45;
-  --company-text: #eff3fb;
-  --company-muted: #b1c1d8;
-  --company-border: #3a4c65;
+  --company-bg: #131e2e;
+  --company-card: #202e42;
+  --company-panel: #29394f;
+  --company-text: #f5f7fc;
+  --company-muted: #cfdae9;
+  --company-border: #50647d;
   --company-accent: #adc3ff;
   --company-primary: #aac0ff;
   --company-primary-hover: #cad6ff;
@@ -343,3 +343,45 @@ html[data-company-theme] .company-app .cr-queue {background: none}
 .cr-daily-modal .cr-daily-content section {border-inline-start: 3px solid var(--co-line); padding-inline-start: 12px; margin-bottom: 14px}
 .cr-daily-modal .cr-daily-content section:first-child {border-color: var(--co-accent)}
 .cr-receipt[data-returned="true"] {color: var(--company-warning); background: var(--company-warning-bg)}
+
+/* Reading sizes apply to the dark workspace and its dialogs, including narrow screens. */
+@media screen {
+  html[data-company-theme="dark"] :is(.company-app,.company-login,.co-modal,.co-reauth,.op-dialog,.rc-dialog) {
+    --company-control-edge: #798da8;
+    line-height: 1.6;
+  }
+  html[data-company-theme="dark"] .company-app .co-sidebar nav button {
+    color: var(--company-muted);
+    font-size: 14px;
+    font-weight: 550;
+  }
+  html[data-company-theme="dark"] .company-app .co-sidebar nav button.selected {
+    color: var(--company-accent);
+    font-weight: 650;
+  }
+  html[data-company-theme="dark"] :is(.company-app,.company-login,.co-modal,.co-reauth,.op-dialog,.rc-dialog)
+  :is(small,.co-muted,.co-small,.co-topbar-context,.co-eyebrow,.op-muted,.op-table-note,.op-freshness,.op-ocr-actions p,.och-badge,.op-source-cell figcaption):not(.ps-dialog *) {
+    font-size: clamp(.8125rem, 1em, .9375rem);
+    line-height: 1.55;
+  }
+  html[data-company-theme="dark"] :is(.company-app,.company-login,.co-modal,.co-reauth,.op-dialog,.rc-dialog)
+  :is(label,th,summary):not(.ps-dialog *) {
+    font-size: clamp(.8125rem, 1em, .9375rem);
+  }
+  html[data-company-theme="dark"] :is(.company-app,.company-login,.co-modal,.co-reauth,.op-dialog,.rc-dialog)
+  :is(input:not([type="checkbox"],[type="radio"]),select,textarea):not(.ps-dialog *) {
+    border-color: var(--company-control-edge);
+    caret-color: var(--company-text);
+  }
+  html[data-company-theme="dark"] :is(.company-app,.company-login,.co-modal,.co-reauth,.op-dialog,.rc-dialog)
+  button:disabled:not(.ps-dialog *) {
+    opacity: 1;
+    color: #b7c5d8;
+    background-color: #354050;
+    border-color: #55677e;
+  }
+  html[data-company-theme="dark"] .och-card .recharts-cartesian-axis-tick-value {
+    fill: var(--company-muted);
+    font-size: 13px;
+  }
+}

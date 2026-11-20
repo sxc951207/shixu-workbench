@@ -29,6 +29,15 @@ export default function OperatingProjectBrief(props:ReportProps){
  const shown=ordered.filter(f=>r?.totals[f.key]!=null);
  const field=fields.find(f=>f.key===key)??shown[0]??fields[0];
  const fieldKey=field?.key??'';
+ const overviewFields=field&&shown.some(f=>f.key===field.key)?[field,...shown.filter(f=>f.key!==field.key)]:shown;
+ const overviewCards=overviewFields.map(f=>({
+  id:'field-'+f.key,label:f.label+(r?.complete?'':' · 已报小计'),value:formats(r?.totals[f.key],f.kind),
+  previous:r?.priorTotals[f.key]!=null?formats(r.priorTotals[f.key],f.kind):null
+ }));
+ for(const metric of r?.metrics??[]){
+  if(metric.value==null||metric.unitIssue)continue;
+  overviewCards.push({id:'metric-'+metric.key,label:metric.label,value:metric.format==='percent'?formatOperatingPercent(metric.value):formatOperatingDecimal(metric.value,2)+(metric.format==='money'?' 元':' 倍'),previous:null});
+ }
  const fmt=(n:number|null|undefined)=>formats(n,field?.kind??'count');
  const ranked=(r?.details??[]).filter(s=>s.values[fieldKey]!=null).sort((a,b)=>b.values[fieldKey]!-a.values[fieldKey]!||a.name.localeCompare(b.name,'zh-CN'));
  const days=(r?.days??[]).map(date=>({date,value:r?.byDay.get(date)?.[fieldKey]??null}));
@@ -56,7 +65,8 @@ export default function OperatingProjectBrief(props:ReportProps){
   {needHistory&&!past&&<p role="status">正在读取跨月数据…</p>}{past?.error&&<p role="alert">历史月份读取失败，跨月数字可能未齐。<button onClick={()=>setRetry(i=>i+1)}>重试</button></p>}
   {result.error?<p role="alert">{result.error}</p>:!r?.current.length?<p>本期暂无已确认记录。{latest&&latest!==cutoff&&<button onClick={()=>props.changeDate(latest)}>查看 {latest} 的报表</button>}</p>:<>
    <section><h4>{periodName}概览 <small>{r.current.length} / {r.days.length} 天已确认</small></h4>
-    <div className="op-readout-grid">{shown.slice(0,6).map(f=><article key={f.key}><span>{f.label}{!r.complete?' · 已报小计':''}</span><strong>{formats(r.totals[f.key],f.kind)}</strong>{r.priorTotals[f.key]!=null&&<small>{compareLabel} {formats(r.priorTotals[f.key],f.kind)}</small>}</article>)}{r.metrics.filter(m=>m.value!=null&&!m.unitIssue).slice(0,3).map(m=><article key={m.key}><span>{m.label}</span><strong>{m.format==='percent'?formatOperatingPercent(m.value!):formatOperatingDecimal(m.value!,2)+(m.format==='money'?' 元':' 倍')}</strong></article>)}</div>
+    <div className="op-readout-grid">{overviewCards.slice(0,4).map(card=><article key={card.id}><span>{card.label}</span><strong>{card.value}</strong>{card.previous!==null&&<small>{compareLabel} {card.previous}</small>}</article>)}</div>
+    {overviewCards.length>4&&<details className="op-brief-more"><summary>更多指标（{overviewCards.length-4}）</summary><dl>{overviewCards.slice(4).map(card=><div key={card.id}><dt>{card.label}</dt><dd>{card.value}{card.previous!==null&&<small>{compareLabel} {card.previous}</small>}</dd></div>)}</dl></details>}
     {r.missing.length>0&&<details><summary>还有 {r.missing.length} 天缺报</summary><p>{r.missing.join('、')}</p></details>}{!r.complete&&!r.missing.length&&<p>期间门店范围有变化，总数按已报范围展示。</p>}
    </section>
    <section><h4>{periodName}分析</h4><div className="op-brief-insights">

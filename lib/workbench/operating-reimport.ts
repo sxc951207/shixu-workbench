@@ -34,11 +34,22 @@ type ImportActions={
  login:string;previous:OperatingImportReceipt[];reason:string;
 };
 
-export function completeOperatingRecord(record:OperatingRecord){
+export function incompleteRecordReason(record:OperatingRecord){
  try{
   validateOperatingRows(record.sheet,record.rows,record.rows.map(row=>({id:row.storeId,name:row.storeName})),true,record.template,record.sharedAdSpend);
-  return true;
- }catch{return false;}
+ }catch(error){
+  const fields=operatingFields(record.sheet,record.template).filter(field=>field.required&&!(field.key==='adSpend'&&record.sharedAdSpend!==undefined));
+  const missing=fields.filter(field=>record.rows.some(row=>row.values[field.key]===null));
+  if(missing.length){
+   const stores=record.rows.filter(row=>missing.some(field=>row.values[field.key]===null));
+   const where=record.rows.length>1?'（'+stores.slice(0,2).map(row=>row.storeName).join('、')+(stores.length>2?'等 '+stores.length+' 家门店':'')+'）':'';
+   return '待补字段：'+missing.map(field=>field.label).join('、')+where;
+  }
+  return error instanceof Error?error.message:'请核对填报内容';
+ }
+}
+export function completeOperatingRecord(record:OperatingRecord){
+ return !incompleteRecordReason(record);
 }
 export function canWriteOperatingSheet(sheet:OperatingSheet,month:ImportMonth,owner:boolean){
  if(!month.config)return false;
@@ -52,7 +63,7 @@ export function importSubmitIssue(record:OperatingRecord,month:ImportMonth,owner
  if(record.status!=='draft'&&record.status!=='returned')return;
  if(!canWriteOperatingSheet(record.sheet,month,owner))return '当前账号仅可查看';
  if(originalVersion!==record.version)return originalVersion?'导入时 V'+originalVersion+'，请打开当前版本重新核对':'请打开当前版本重新核对';
- if(!completeOperatingRecord(record))return '请先补齐必填项';
+ return incompleteRecordReason(record);
 }
 export const reconciledStatus='已重新核实云端内容一致，前次保存结果未收到';
 export function importDayComplete(receipt:Pick<OperatingImportReceipt,'outcome'>){

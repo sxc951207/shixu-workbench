@@ -195,7 +195,7 @@ test('a supervisor can view platform drafts but receipt submission requires curr
  const entries=[revenue,platform,partial].map(record=>({sheet:record.sheet,date:record.date,recordVersion:record.version,outcome:'unchanged' as const}));
  const receipts=await refreshReceipt(entries,month=>f.call(f.manager,{action:'ops.month',projectId:f.project.id,month}),false);
  assert.deepEqual(receipts.map(r=>r.record?.id),[revenue.id,platform.id,partial.id]);
- assert.deepEqual(receipts.map(r=>r.submitIssue),[undefined,'当前账号仅可查看','请先补齐必填项']);
+ assert.deepEqual(receipts.map(r=>r.submitIssue),[undefined,'当前账号仅可查看','待补字段：门店总业绩（'+stores[1].name+'）']);
  const changed=await f.call(f.manager,{action:'ops.save',projectId:f.project.id,sheet:revenue.sheet,date:revenue.date,version:revenue.version,rows:revenueRows().map(row=>({...row,values:{revenue:500}}))});
  const refreshed=await refreshReceipt(entries,month=>f.call(f.manager,{action:'ops.month',projectId:f.project.id,month}),false);
  assert.equal(refreshed[0].record?.version,changed.record.version);

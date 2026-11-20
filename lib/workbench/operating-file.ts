@@ -1,4 +1,4 @@
-import {platformImportField} from './operating-paste.ts';
+import {importPlatformConflict,platformImportField} from './operating-paste.ts';
 import {douyinScreenshotPeriod} from './operating-source-date.ts';
 import {isOperatingReportNote} from './operating-report-note.ts';
 import {operatingFields,parseOperatingInput} from './operating-data.ts';
@@ -47,14 +47,22 @@ export async function readOperatingFile(file:Pick<File,'name'|'size'|'arrayBuffe
 export function operatingTableText(rows:unknown[][]):string{
  return rows.map(row=>row.map(cell=>{const raw=cell==null?'':cell instanceof Date?cell.toISOString().slice(0,10):String(cell);return /["\t\r\n]/.test(raw)?'"'+raw.replace(/"/g,'""')+'"':raw;}).join('\t')).join('\n');
 }
+export class PlatformScopeNeeded extends Error{}
 const dimensionHeader=/^(门店|门店名称|门店全称|门店名|店名|门店编号|范围|渠道(?:名称)?|账号(?:名称)?|店铺(?:名称)?|项目|store|storeName|storeId)$/;
 export function isBrandedPlatformTotal(matrix:unknown[][],header:number,sheet:string){
  if(sheet!=='meituan'&&sheet!=='douyin')return false;
  const title=matrix.slice(0,header).flat().join(''),labels=operatingLeafLabels(matrix,header);
+ const scope=labels.indexOf('范围'),date=labels.indexOf('日期');
+ if(scope>=0&&date>=0&&labels.filter(h=>dimensionHeader.test(h)||h==='名称').length===1){
+  const rows=matrix.slice(header+1).filter(r=>r.some(v=>String(v??'').trim()));
+  if(rows.length&&rows.every(r=>String(r[scope]??'').trim()==='全平台'&&String(r[date]??'').trim()))return true;
+ }
  return title.includes(sheet==='meituan'?'美团':'抖音')&&/平台(?:数据|总盘|汇总)/.test(title)&&labels.includes('日期')&&!labels.some(s=>dimensionHeader.test(s)||s==='名称');
 }
 export function prepareOperatingFileRows(matrix:unknown[][],headerRow:number,options:OperatingPasteOptions,sourceRows?:ReadonlyMap<unknown[],number>){
  if(!matrix[headerRow]?.length)throw Error('请选择正确表头行');
+ const conflict=importPlatformConflict(matrix,headerRow,options.sheet,options.template);
+ if(conflict)throw Error(conflict);
  const header=operatingLeafLabels(matrix,headerRow);
  header.forEach(assertOperatingYuanUnit);
  const dateHeader=/^(日期|填报日期|业务日期|统计日期|数据日期|发生日期|成交日期|date)$/i;
@@ -64,7 +72,7 @@ export function prepareOperatingFileRows(matrix:unknown[][],headerRow:number,opt
  const dimensionIndex=explicitDimension>=0?explicitDimension:options.sheet==='douyin-stores'?header.indexOf('名称'):-1;
  for(const h of header)if(!dateHeader.test(h)&&/日期|时间|月份|月度|周期|截止|截至|周次|period|month|week/i.test(h))throw Error('源表包含期间或累计截止列“'+h+'”，请明确为单日业务日期或改用对应累计明细表，不能忽略后当作当日数据');
  const platform=options.sheet==='meituan'||options.sheet==='douyin';
- if(platform&&dimensionIndex<0&&(options.stores.length!==1||options.stores[0].id!=='all'))throw Error('源表没有门店列。如为平台日总盘，请选择「只有平台总数」后导入。');
+ if(platform&&dimensionIndex<0&&(options.stores.length!==1||options.stores[0].id!=='all'))throw new PlatformScopeNeeded('源表没有门店列。如为平台日总盘，请选择「只有平台总数」后导入。');
  const douyinLabels:Record<string,string>={'成交金额':'下单金额','成交券数':'下单券数','退款券数':'退款订单数','新增好评数':'新增好评','新增中差评数':'新增中差评','消耗':'推广花费'};
  const sharedIndex=options.sheet==='douyin-stores'?header.indexOf('全平台累计消耗'):-1;
  let sharedAdSpend:number|undefined;
@@ -100,7 +108,7 @@ export function prepareOperatingFileRows(matrix:unknown[][],headerRow:number,opt
  if(dimensionIndex<0&&rows.length>1)throw Error('没有门店或日期区分的多行数据不能自动合并为单日累计，请整理后导入');
  let prefix=matrix.slice(0,headerRow).flat().filter(v=>v!=null).map(String).join(' ');
  if(options.sheet==='douyin-stores'){const period=douyinScreenshotPeriod(prefix,options.date);if(period){assertOperatingYuanUnit(prefix);prefix='抖音门店累计 '+period.start+' 至 '+period.end;}}
- if(platform&&dateIndex>=0){
+ if((platform||options.template)&&dateIndex>=0){
   const coverage=/^每日(?:数据|明细)\s*(\d{4}-\d{2}-\d{2})\s*(?:至|到)\s*(\d{4}-\d{2}-\d{2})(?:\s*[（(]来源[:：][^（）()\n]+[）)])?$/.exec(prefix.trim());
   if(coverage){assertOperatingYuanUnit(prefix);const start=operatingImportDate(coverage[1]),end=operatingImportDate(coverage[2]);if(options.date<start||options.date>end)throw Error('所选业务日期不在每日明细的标题区间内');prefix='填报日期 '+options.date;}
 

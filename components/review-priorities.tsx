@@ -31,6 +31,9 @@ export default function ReviewPriorities({companyId,revision,refreshKey,items,co
  const primary=ready?(change?'change':oldest?'oldest':'roster'):null;
  const unavailable=failed?'待审记录读取失败，请刷新。':'正在读取待审记录…';
  const partial=ready&&!complete;
+ if(ready&&complete&&!failed&&!rosterError&&due?.length===0&&items.length===0){
+  return <p className="co-muted cr-priorities-empty" role="status">今日没有未交日报，待审队列已清空。</p>;
+ }
  return <section className="cr-priorities" aria-label="主管优先处理">
   <section><div><h2>今日应交未交</h2>
    <p>{rosterError?'日报名单读取失败：'+rosterError:due===null?'正在读取今日名单…':due.length

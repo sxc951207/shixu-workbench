@@ -44,17 +44,25 @@ export function checkPrintedWeekday(date:string, weekday:string, before:string, 
 
 /** Only collapse a recognized platform-wide daily sheet when every input column and row is accounted for. */
 export function meituanDailyPreview(rows:string[][],header:number){
+ return meituanDailyReview(rows,header)?.matrix??null;
+}
+export function meituanDailyReview(rows:string[][],header:number,weakKeys:string[]=[]){
  const headings=rows[header],dateColumn=headings?.indexOf('日期');
  if(!headings||headings.length!==18||dateColumn<0||headings.some(h=>/^(?:门店|店铺|渠道)(?:名称)?$/.test(h)))return null;
  const columns=meituanDailyColumns.map(f=>headings.indexOf(f.label));
  if(columns.some((c,i)=>c<0||headings.lastIndexOf(meituanDailyColumns[i].label)!==c))return null;
  const matrix=[['日期','范围',...meituanDailyColumns.map(f=>f.label)]],dates=new Set<string>();
- for(const row of rows.slice(header+1)){
+ const sourceRows=[header],sourceColumns=[dateColumn,-1,...columns],uncertain:string[]=[],weak=new Set(weakKeys);
+ for(let r=header+1;r<rows.length;r++){
+  const row=rows[r];
   const date=row[dateColumn]?.trim();
   if(/^(?:月度|合计|总计|小计|第[一二三四五六七八九十\d]+周(?:合计)?)$/.test(date))continue;
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||dates.has(date))return null;
   dates.add(date);
-  matrix.push([date,'全平台',...columns.map((c,i)=>meituanCellValue(row[c]||'','money' in meituanDailyColumns[i]))]);
+  sourceRows.push(r);
+  const line=[date,'全平台',...columns.map((c,i)=>meituanCellValue(row[c]||'','money' in meituanDailyColumns[i]))];
+  sourceColumns.forEach((c,i)=>{if(c>=0&&(!line[i]||weak.has(r+':'+c)))uncertain.push(matrix.length+':'+i);});
+  matrix.push(line);
  }
- return dates.size?matrix:null;
+ return dates.size?{matrix,sourceRows,sourceColumns,uncertain}:null;
 }

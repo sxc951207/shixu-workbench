@@ -1,6 +1,7 @@
 'use client';
 import React,{useEffect,useId,useRef,useState}from'react';
 import {ArrowRight, Undo2, CalendarDays, ChartColumn, CheckCheck, ChevronDown, ClipboardCheck, FileText, FolderKanban, ListFilter, ListRestart, RefreshCw, Settings2} from 'lucide-react';
+import {approvalDescription} from '../lib/workbench/approval-display';
 import {companyRequest as api} from '../cloud/company-root';
 import {groupReviewSubmissions,type CompanyReviewFilter,type CompanyReviewItem,type CompanyReviewPage,type ReviewConfigurationProject}from'../lib/workbench/company-review';
 import CompanyLightRibbon from './company-light-ribbon';
@@ -48,7 +49,7 @@ export function SupervisorProjectSetup({companyId,revision,disabled,onOpen}:{com
 export default function CompanyReviewQueue({companyId,revision,disabled,showConfiguration,allowRoster=showConfiguration,onRevision,onPick,onConfigure}:{companyId:string;revision:number;disabled:boolean;showConfiguration:boolean;allowRoster?:boolean;onRevision?:(n:number)=>void;onPick:(item:CompanyReviewItem)=>void;onConfigure:(project:ReviewConfigurationProject)=>void}){
  const[filter,setFilter]=useState<CompanyReviewFilter>({type:'all',projectId:'',month:''}),[projects,setProjects]=useState<ReviewConfigurationProject[]|null>(null),[projectError,setProjectError]=useState(''),[items,setItems]=useState<CompanyReviewItem[]>([]),[page,setPage]=useState<CompanyReviewPage|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState('');const sequence=useRef(0),mounted=useRef(true);
  const [filtersOpen,setFiltersOpen]=useState(false),[refreshKey,setRefreshKey]=useState(0);
- const [daily,setDaily]=useState<CompanyReviewItem|null>(null),[roster,setRoster]=useState(false),[name,setName]=useState(''),[notice,setNotice]=useState<{name:string;returned:boolean}|null>(null);
+ const [daily,setDaily]=useState<CompanyReviewItem|null>(null),[roster,setRoster]=useState(false),[name,setName]=useState(''),[notice,setNotice]=useState<{name:string;returned:boolean;next?:string}|null>(null);
  const [rosterRevision,setRosterRevision]=useState(0);
  const [dueOnly,setDueOnly]=useState(false);
  const openedRevision=useRef(revision),listRevision=daily?openedRevision.current:revision;
@@ -59,9 +60,9 @@ export default function CompanyReviewQueue({companyId,revision,disabled,showConf
  const nextDaily=daily?dailyRows[dailyRows.findIndex(row=>row.id===daily.id)+1]:undefined;
  const hasNext=!!daily&&!roster&&dailyRows.some(row=>row.id===daily.id)&&!!nextDaily;
  function openItem(item:CompanyReviewItem){if(item.type==='daily'){openedRevision.current=revision;listY.current=window.scrollY;setDaily(item);setNotice(null);}else onPick(item);}
- function finish(revision:number,advance:boolean,returned:boolean){
+ function finish(revision:number,advance:boolean,returned:boolean,next?:string){
   setItems(rows=>rows.filter(row=>row.id!==daily?.id));setRosterRevision(revision);lastReviewRevision.current=revision;
-  setNotice({name:daily?.submittedName||daily?.submittedBy||'员工',returned});
+  setNotice({name:daily?.submittedName||daily?.submittedBy||'员工',returned,next});
   if(advance&&hasNext){setDaily(nextDaily!);return;}
   closeReview();
  }
@@ -94,7 +95,7 @@ export default function CompanyReviewQueue({companyId,revision,disabled,showConf
     <RefreshCw size={15} aria-hidden="true"/>刷新
    </button>
   </div>
-  {notice&&<p role="status" className="cr-receipt" data-returned={notice.returned}>{notice.returned?<Undo2 size={16} aria-hidden="true"/>:<CheckCheck size={16} className="sx-approved-icon" aria-hidden="true"/>}{notice.name}的日报{notice.returned?'已退回补充':'已确认'}。</p>}
+  {notice&&<p role="status" className="cr-receipt" data-returned={notice.returned}>{notice.returned?<Undo2 size={16} aria-hidden="true"/>:<CheckCheck size={16} className="sx-approved-icon" aria-hidden="true"/>}{notice.name}的日报{notice.returned?'已退回补充':notice.next?'本步已确认。'+notice.next:'已确认'}。</p>}
   {roster?<SupervisorDailyRoster initialDueOnly={dueOnly} companyId={companyId} revision={Math.max(revision,rosterRevision,0)+refreshKey} onRevision={onRevision} onPick={openItem}/>:<>
   <button type="button" className="cr-filter-toggle" aria-expanded={filtersOpen} aria-controls={filterPanelId} onClick={()=>setFiltersOpen(open=>!open)}>
    <ListFilter size={16} aria-hidden="true"/><strong>筛选待审</strong>
@@ -149,7 +150,7 @@ export default function CompanyReviewQueue({companyId,revision,disabled,showConf
       <header><strong>{item.projectName} · {sheetName}</strong><small>同批提交 · {item.submittedBy} · 当前已读取 {submissionGroup.items.length} 天待核对</small></header>
       <div className="cr-batch-dates">{submissionGroup.items.map(day=><button key={day.id} type="button" disabled={disabled||loading}
        aria-label={'核对 '+day.projectName+' '+sheetName+' '+day.date+(day.amendment?' 更正':'')} onClick={()=>openItem(day)}>
-       <span>{day.date}</span>{day.amendment&&<small>更正</small>}<ArrowRight size={14} aria-hidden="true"/>
+       <span>{day.date}</span>{day.approvalFlow&&<small>{approvalDescription(day,'submitted')}</small>}{day.amendment&&<small>更正</small>}<ArrowRight size={14} aria-hidden="true"/>
       </button>)}</div>
      </section>;
      const description=[labels[item.type],sheetName].filter(Boolean).join(' · ');
@@ -159,7 +160,7 @@ export default function CompanyReviewQueue({companyId,revision,disabled,showConf
      return <button key={item.type+item.id} data-kind={item.type} type="button" disabled={disabled||loading}
       aria-label={['核对 '+item.projectName,item.submittedName,submission,description,period].filter(Boolean).join(' · ')} onClick={()=>openItem(item)}>
       <span className="cr-kind-icon" aria-hidden="true"><Icon size={19} strokeWidth={1.7}/></span>
-      <span className="cr-item-body"><span className="cr-item-title"><strong>{item.type==='daily'?(item.submittedName||item.submittedBy):item.projectName}</strong><b className="cr-submission" data-amendment={!!item.amendment}>{submission}</b></span><span className="cr-item-kind">{item.type==='daily'?item.projectName+' · '+description:description}</span>{item.excerpt&&<span className="cr-excerpt">{item.excerpt}</span>}
+      <span className="cr-item-body"><span className="cr-item-title"><strong>{item.type==='daily'?(item.submittedName||item.submittedBy):item.projectName}</strong><b className="cr-submission" data-amendment={!!item.amendment}>{submission}</b></span><span className="cr-item-kind">{item.type==='daily'?item.projectName+' · '+description:description}</span>{item.approvalFlow&&<span className="cr-item-kind">{approvalDescription(item,'submitted')}</span>}{item.excerpt&&<span className="cr-excerpt">{item.excerpt}</span>}
        <small><CalendarDays size={13} aria-hidden="true"/>{period}{item.type==='project'?' 提交':''}{item.type!=='daily'||item.submittedName!==item.submittedBy?' · '+item.submittedBy:''}</small></span>
       <span className="cr-open">核对<ArrowRight size={16} aria-hidden="true"/></span>
      </button>;

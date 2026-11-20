@@ -4,7 +4,7 @@ import {importReceiptStage,operatingImportCounts,type OperatingImportReceipt as 
 import {operatingSheetNames} from '../lib/workbench/operating-work-queue';
 
 const stages=[
- ['draft','草稿，待提交'],['returned','已退回，待补充'],['submitted','已提交，等主管确认'],
+ ['draft','草稿，待提交'],['returned','已退回，待补充'],['submitted','已提交，等待确认'],
  ['approved','已确认，领导可见'],['unresolved','需核对']
 ] as const;
 const dateLabel=(item:Receipt)=>item.sheet==='targets'?item.date.slice(0,7)+' 门店月目标':item.date;
@@ -31,18 +31,20 @@ export default function OperatingImportOutcome({receipts,onView,onSubmit}:{recei
  const waiting=receipts.filter(item=>importReceiptStage(item)==='submitted').length;
  const approved=receipts.filter(item=>importReceiptStage(item)==='approved').length;
  const unit=!targets.length&&new Set(days.map(item=>item.date)).size===days.length?'天':'条';
- const headline=review.length?review.length+' '+unit+'需核对':drafts.length?drafts.length+' '+unit+'草稿待提交':receipts.length&&waiting+approved===receipts.length?'本次无需再提交':'暂无导入结果';
+ const missingFields=review.length>0&&review.every(item=>item.submitIssue?.startsWith('待补字段：'));
+ const commonIssue=missingFields&&review.every(item=>item.submitIssue===review[0].submitIssue)?review[0].submitIssue:'';
+ const headline=missingFields?review.length+' '+unit+'已保存，待补字段':review.length?review.length+' '+unit+'需核对':drafts.length?drafts.length+' '+unit+'草稿待提交':receipts.length&&waiting+approved===receipts.length?'本次无需再提交':'暂无导入结果';
  return <section className="op-import-outcome" aria-label="业务日期导入回执">
   <div role="status"><h4>{headline}</h4>
-   {(waiting>0||approved>0)&&<p>{[waiting&&waiting+' '+unit+'等主管确认',approved&&approved+' '+unit+'已确认'].filter(Boolean).join('，')}。</p>}
-   {!!review.length&&<p>请查看下方记录中的原因。</p>}
+   {(waiting>0||approved>0)&&<p>{[waiting&&waiting+' '+unit+'等待确认',approved&&approved+' '+unit+'已确认'].filter(Boolean).join('，')}。</p>}
+   {!!review.length&&<p>{commonIssue||'请查看下方记录中的原因。'}</p>}
   </div>
   {!!drafts.length&&<button type="button" className="co-primary op-receipt-submit" onClick={()=>onSubmit(drafts)}>提交这 {drafts.length} {unit}草稿</button>}
   {stages.map(([stage,label])=>{
-   const group=days.filter(item=>importReceiptStage(item)===stage);
+   const group=days.filter(item=>stage==='unresolved'?needsReview(item):!needsReview(item)&&importReceiptStage(item)===stage);
    if(!group.length)return null;
    return <details key={stage} className="op-import-stage" open={group.some(needsReview)||undefined}>
-    <summary><strong>{group.length} {unit}{label}</strong> · 查看这 {group.length} {unit}</summary>
+    <summary><strong>{group.length} {unit}{stage==='unresolved'&&missingFields?'待补字段':label}</strong> · 查看这 {group.length} {unit}</summary>
     <ul>{group.map(item=><ReceiptRow key={item.sheet+item.date} item={item} onView={onView}/>)}</ul>
    </details>;
   })}

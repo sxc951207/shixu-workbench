@@ -8,17 +8,27 @@ import type {OperatingMetricValue} from './operating-templates.ts';
 export type OperatingPasteOptions={sheet:OperatingSheet;date:string;stores:OperatingStore[];template?:OperatingTemplate;storeAliases?:ReadonlyMap<string,string>};
 export type OperatingPastePreview={sharedAdSpend?:number;rows:OperatingRow[];columns:string[];missingStores:string[];storeMatches?:{source:string;target:string}[];ignoredColumns?:string[];skippedSummaryRows?:number};
 const aliases:Record<string,string[]>={revenue:['总业绩','门店总业绩','营业额','业绩'],target:['月目标','目标'],orderedCoupons:['下单券数','下单数量'],orderAmount:['下单金额'],verifiedCoupons:['核销券数','核销数量'],verifiedAmount:['核销金额'],refundOrders:['退款订单数','退款订单量','退款单数','退款订单','退单量'],refundAmount:['退款金额'],adSpend:['推广花费','推广消耗','推广通消耗金额','广告花费','推广费','广告费'],positiveReviews:['新增好评','新增好评数'],stars:['星级','星级评分','美团星级']};
-const headerUnit=/[（(]\s*(元|张|单|次|人|个|星)\s*[）)]$/;
+const headerUnit=/[（(]\s*(元|张|单|次|人|个|条|星)\s*[）)]$/;
 const headerName=(value:string)=>value.trim().replace(/^'(?=[=+@-])/,'').replace(headerUnit,'').trim();
-const meituanColumnNames:Record<string,string>={'退款售价金额':'退款金额','退单量':'退款订单数','自然曝光次数':'自然曝光','cpc曝光次数':'付费曝光','在线咨询人数':'咨询数','在线咨询留资人数':'线索数'};
+const meituanColumnNames:Record<string,string>={'商家优惠后核销额':'核销金额','下单售价金额':'下单金额','退款售价金额':'退款金额','退单量':'退款订单数','自然曝光次数':'自然曝光','cpc曝光次数':'付费曝光','在线咨询人数':'咨询数','在线咨询留资人数':'线索数'};
 const douyinStoreColumns:Record<string,string>={'成交金额':'下单金额','成交券数':'下单券数','退款券数':'退款订单数','新增好评数':'新增好评','新增中差评数':'新增中差评','消耗':'推广花费'};
-const douyinColumnNames:Record<string,string>={'门店访问':'进店次数','门店访问次数':'进店次数','门店访问人':'进店人数','门店访问人数':'进店人数','进入私信人':'私信咨询人数','进入私信人数':'私信咨询人数','私信开口人':'私信开口人数','私信线索人':'私信留资人数','私信线索人数':'私信留资人数'};
+const douyinColumnNames:Record<string,string>={'门店访问':'进店次数','门店访问次数':'进店次数','门店访问/次':'进店次数','门店访问人':'进店人数','门店访问人数':'进店人数','进入私信人':'私信咨询人数','进入私信人数':'私信咨询人数','私信开口人':'私信开口人数','私信线索人':'私信留资人数','私信线索人数':'私信留资人数'};
+function singlePlatform(text:string){
+ const brands=['抖音','美团'].filter(brand=>text.includes(brand));
+ return brands.length===1?brands[0]:undefined;
+}
+export function importPlatformConflict(matrix:unknown[][],header:number,sheet:OperatingSheet,template?:OperatingTemplate,tab=''){
+ const titles=matrix.slice(0,header).map(row=>row.filter(v=>String(v??'').trim())).filter(row=>row.length===1).flat().join(' ');
+ const source=singlePlatform(/美团|抖音/.test(titles)?titles:tab);
+ const target=sheet.startsWith('douyin')?'抖音':sheet.startsWith('meituan')?'美团':singlePlatform(template?.name??'');
+ if(source&&target&&source!==target)return '原表标明「'+source+'」，当前选的是「'+target+'」。请返回选择同平台的报表，再读取预览。';
+}
 export function platformImportField(label:string,sheet:string,fields:ReturnType<typeof operatingFields>){
  const direct=matchOperatingField(label,fields);if(direct)return direct;
  const name=label.replace(/\s/g,'').replace(/[（(]元[）)]$/,'').toLowerCase();
  if(sheet==='douyin-stores'&&Object.hasOwn(douyinStoreColumns,name))return matchOperatingField(douyinStoreColumns[name],fields);
  if(sheet==='douyin'&&Object.hasOwn(douyinColumnNames,name))return matchOperatingField(douyinColumnNames[name],fields);
- if(sheet==='meituan'&&Object.hasOwn(meituanColumnNames,name))return matchOperatingField(meituanColumnNames[name],fields);
+ if((sheet==='meituan'||sheet==='meituan-stores')&&Object.hasOwn(meituanColumnNames,name))return matchOperatingField(meituanColumnNames[name],fields);
 }
 export function matchOperatingField(label:string,fields:ReturnType<typeof operatingFields>){
  assertOperatingYuanUnit(label);

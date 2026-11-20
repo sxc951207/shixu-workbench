@@ -1,5 +1,8 @@
+import {isDeepStrictEqual} from 'node:util';
+import {submissionFlow,isCurrentApprover,nextApprovalStep,updatePendingApprovers} from './approval-flow.ts';
 import {activeProjects} from './model.ts';
 import {supervisedProjects} from './supervised.ts';
+import {approvalPreview} from '../../lib/workbench/approval-display.ts';
 import {operatingColumnRules} from './operating-column-rules.ts';
 import {operatingStoreAliases} from './operating-alias.ts';
 import {executeIndicators} from './operating-indicators.ts';
@@ -19,7 +22,7 @@ const builtins=['revenue','targets','meituan','douyin','meituan-stores','douyin-
 function fail(message:string,status=400):never{throw new WorkbenchError(message,status);}
 export const operatingIndexKey=(companyId:string,month:string)=>'operating_index_'+companyId+'_'+month;
 export const operatingVersionKey=(id:string,version:number)=>'operating_version_'+id+'_'+version;
-export function operatingHead(r:OperatingRecord):OperatingHead{return{id:r.id,projectId:r.projectId,sheet:r.sheet,date:r.date,status:r.status,version:r.version,publishedVersion:r.publishedVersion,submittedBy:r.submittedBy};}
+export function operatingHead(r:OperatingRecord):OperatingHead{return{...(r.approvalFlow?{approvalFlow:r.approvalFlow}:{}),id:r.id,projectId:r.projectId,sheet:r.sheet,date:r.date,status:r.status,version:r.version,publishedVersion:r.publishedVersion,submittedBy:r.submittedBy};}
 export function operatingId(companyId:string,projectId:string,sheet:string,date:string){return'op_'+digest(companyId+':'+projectId+':'+sheet+':'+date).slice(0,32);}
 const isCustom=(sheet:string)=>sheet.startsWith('tpl_');
 function validMonth(value:unknown):string{if(typeof value!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(value)||value<'1970-01'||value>'2100-12')fail('月份无效');return value;}
@@ -34,8 +37,12 @@ function sheetEnabled(config:OperatingConfig,sheet:string){return isCustom(sheet
 function writerFor(sheet:string,config:OperatingConfig){return isCustom(sheet)?templateAt(config,sheet)?.writer:sheet==='revenue'||sheet==='targets'?'supervisor':'owner';}
 function canWrite(actor:Actor,member:Member|null|undefined,c:Company,p:Pick<Project,'ownerLogin'|'reviewerLogin'|'participants'>,config:OperatingConfig,sheet:string){const writer=writerFor(sheet,config);return !!actor.owner||platformSheet(sheet)&&platformContributor(member,p)||writer==='supervisor'&&!!member&&realSupervisor(c,p)?.login===member.login||writer==='project-owner'&&!!member&&p.ownerLogin===member.login&&member.roles.some(r=>r==='employee'||r==='supervisor');}
 function canReadSheet(actor:Actor,member:Member|null|undefined,c:Company,p:Project,config:OperatingConfig|null,sheet:string){return !!actor.owner||platformSheet(sheet)&&platformContributor(member,p)||!!member&&realSupervisor(c,p)?.login===member.login||!!config&&isCustom(sheet)&&writerFor(sheet,config)==='project-owner'&&!!member&&p.ownerLogin===member.login&&member.roles.some(r=>r==='employee'||r==='supervisor');}
-export function operatingReviewerLogin(c:Company,p:Project,r:OperatingRecord,viewer?:string){const supervisor=realSupervisor(c,p)?.login;if(viewer==='owner'&&r.submittedBy!=='owner'&&(r.submittedBy===supervisor||r.reviewerLogin==='owner'))return 'owner';return supervisor||(r.reviewerLogin==='owner'&&r.submittedBy!=='owner'?'owner':'');}
-function currentProjection(c:Company,p:Project,r:OperatingRecord,viewer:string):OperatingRecord{return r.status==='submitted'?{...r,reviewerLogin:operatingReviewerLogin(c,p,r,viewer)}:r;}
+export function operatingReviewerLogin(c:Company,p:Project,r:OperatingRecord,viewer?:string){if(r.approvalFlow)return r.approvalFlow.steps[r.approvalFlow.index];const supervisor=realSupervisor(c,p)?.login;if(viewer==='owner'&&r.submittedBy!=='owner'&&(r.submittedBy===supervisor||r.reviewerLogin==='owner'))return 'owner';return supervisor||(r.reviewerLogin==='owner'&&r.submittedBy!=='owner'?'owner':'');}
+function currentProjection(c:Company,p:Project,r:OperatingRecord,viewer:string):OperatingRecord&{approvalPreview?:string[]}{
+ if(r.status!=='submitted')return r;
+ const reviewerLogin=operatingReviewerLogin(c,p,r,viewer);
+ return {...r,reviewerLogin,approvalPreview:approvalPreview(c.members,[reviewerLogin])};
+}
 function leaderProjection(r:OperatingRecord):OperatingRecord|null{return r.published?{...r.published,published:structuredClone(r.published)}:null;}
 function snapshotConfig(projectId:string,records:OperatingRecord[]):OperatingConfig{const stores=new Map<string,OperatingStore>(),templates=new Map<string,OperatingTemplate>(),enabled=new Set<string>();for(const r of records){if(r.template)templates.set(r.template.id,r.template);else enabled.add(r.sheet);for(const row of r.rows)if(row.storeId!=='all')stores.set(row.storeId,{id:row.storeId,name:row.storeName});}return{projectId,stores:[...stores.values()],templates:[...templates.values()],builtinSheets:[...enabled]as any,dimensionLabel:'明细项'};}
 export async function readIndex(tx:CompanyTx,c:Company,month:string){
@@ -52,6 +59,7 @@ async function write(tx:CompanyTx,c:Company,r:OperatingRecord,actor:Actor,member
  const month=r.date.slice(0,7),key=operatingIndexKey(c.id,month),index=await readIndex(tx,c,month),old=index.items.find(h=>h.id===r.id);
  if(!old&&index.items.length>=2000)fail('当月经营记录已达容量，请联系管理员');
  if(old?old.version!==r.version-1:r.version!==1)fail('经营记录目录版本已变化，请刷新',409);
+ updatePendingApprovers(c,r.projectId,old,r);
  index.items=index.items.filter(h=>h.id!==r.id);index.items.push(operatingHead(r));index.revision++;index.versions++;
  if(Buffer.byteLength(JSON.stringify(index))>900000)fail('当月经营目录较大，保存已停止，请联系管理员');
  const version:OperatingVersion={operating:r,action,actor:actor.owner?'管理员':member!.name,at:clock.toISOString()},payload=JSON.stringify(version),indexPayload=JSON.stringify(index);
@@ -172,12 +180,12 @@ export async function executeOperating(tx:CompanyTx,actor:Actor,b:any,clock=new 
   const records:OperatingRecord[]=[];
   for(const head of heads.slice(page*20,page*20+20)){
    const r=await tx.get<OperatingRecord>(head.id);
-   if(!r||r.companyId!==c.id||r.projectId!==p.id||Object.entries(operatingHead(r)).some(([key,value])=>head[key as keyof OperatingHead]!==value))fail('经营记录与目录不一致，请联系管理员',409);
+   if(!r||r.companyId!==c.id||r.projectId!==p.id||!isDeepStrictEqual(operatingHead(r),head))fail('经营记录与目录不一致，请联系管理员',409);
    if(summary&&!operatingRecordSchema.safeParse(r).success)fail('已确认经营快照与记录不一致，请联系管理员',409);
    const visible=summary?leaderProjection(r):currentProjection(c,p,r,actor.owner?'owner':member!.login);
    if(visible){records.push(visible);if(summary&&r.published&&r.status!=='approved')pendingChanges++;}
   }
-  return{...range,...(day?{day}:{}),project:{id:p.id,name:summary?p.published?.name||config?.confirmedProjectName||records[0]?.projectName||'已确认项目':p.name},config:summary?{...snapshotConfig(p.id,records),...(config?.revenueNote?{revenueNote:config.revenueNote}:{})}:!rights.all&&config?{...config,builtinSheets:(config.builtinSheets||builtins).filter(sheet=>rights.platform&&platformSheet(sheet)),templates:config.templates?.filter(t=>rights.projectOwner&&t.writer==='project-owner')}:config,records,pendingChanges,total:heads.length,page,nextPage:(page+1)*20<heads.length?page+1:null,permissions:{revenue:!summary&&rights.all,platform:!summary&&rights.platform,configure:!summary&&(rights.all||rights.projectOwner),configureOwn:!summary&&!rights.all&&rights.projectOwner,projectOwner:!summary&&(!!actor.owner||rights.projectOwner)},companyRevision:c.revision};
+  return{...range,...(day?{day}:{}),project:{id:p.id,...(summary?{}:{approvalPreview:approvalPreview(c.members,p.approvalChain||[rights.supervisor?.login||''])}),name:summary?p.published?.name||config?.confirmedProjectName||records[0]?.projectName||'已确认项目':p.name},config:summary?{...snapshotConfig(p.id,records),...(config?.revenueNote?{revenueNote:config.revenueNote}:{})}:!rights.all&&config?{...config,builtinSheets:(config.builtinSheets||builtins).filter(sheet=>rights.platform&&platformSheet(sheet)),templates:config.templates?.filter(t=>rights.projectOwner&&t.writer==='project-owner')}:config,records,pendingChanges,total:heads.length,page,nextPage:(page+1)*20<heads.length?page+1:null,permissions:{revenue:!summary&&rights.all,platform:!summary&&rights.platform,configure:!summary&&(rights.all||rights.projectOwner),configureOwn:!summary&&!rights.all&&rights.projectOwner,projectOwner:!summary&&(!!actor.owner||rights.projectOwner)},companyRevision:c.revision};
  }
  if(b.action==='ops.save'){
   const p=await projectAt(tx,c,b.projectId),rights=access(actor,member,c,p),config=configAt(c,p.id);if(!config)fail('请先启用项目经营模板');
@@ -195,6 +203,7 @@ export async function executeOperating(tx:CompanyTx,actor:Actor,b:any,clock=new 
   const record:OperatingRecord=old?{...old,rows,writerLogin:uid,version:old.version+1,updatedAt:at}:{id,companyId:c.id,projectId:p.id,projectName:p.name,sheet,date,rows,status:'draft',version:1,publishedVersion:0,writerLogin:uid,reviewerLogin,submittedBy:'',submittedName:'',submittedAt:null,reviewerName:'',comment:'',createdAt:at,updatedAt:at,published:null,...(template?{template:structuredClone(template)}:{})};
   if(correction&&(old.status==='approved'||old.status==='submitted')){
    delete record.submissionBatchId;
+   delete record.approvalFlow;
    if(old.status==='approved')record.amendmentReason=text(b.reason,1000,true);
    Object.assign(record,{status:'draft',submittedBy:'',submittedName:'',submittedAt:null,reviewerName:'',comment:''});
   }
@@ -204,7 +213,9 @@ export async function executeOperating(tx:CompanyTx,actor:Actor,b:any,clock=new 
  }
  if(!['ops.submit','ops.withdraw','ops.amend','ops.approve','ops.return','ops.history'].includes(b.action))fail('不支持的经营操作');
  if(typeof b.id!=='string'||!/^op_[a-f0-9]{32}$/.test(b.id))fail('经营记录编号无效');const current=await tx.get<OperatingRecord>(b.id);if(!current||current.companyId!==c.id)fail('经营记录不存在',404);
- const p=await projectAt(tx,c,current.projectId),rights=access(actor,member,c,p),config=configAt(c,p.id);if(!config||!rights.live)fail('没有该项目经营操作权限',403);
+ const p=await projectAt(tx,c,current.projectId),rights=access(actor,member,c,p),config=configAt(c,p.id);
+ const routedReview=['ops.approve','ops.return'].includes(b.action)&&isCurrentApprover(actor,c,current);
+ if(!config||!rights.live&&!routedReview)fail('没有该项目经营操作权限',403);
  if(b.action==='ops.history'){if(!canReadSheet(actor,member,c,p,config,current.sheet))fail('没有该表历史的权限',403);const versions:OperatingVersion[]=[];for(let v=current.version;v>Math.max(0,current.version-20);v--){const version=await tx.get<OperatingVersion>(operatingVersionKey(current.id,v));if(!version)fail('经营历史不完整');versions.push(version);}return{versions};}
  validateVersion(b.version);if(b.version!==current.version)fail('经营记录已发生变化，请刷新',409);let r=structuredClone(current);
  delete r.submissionBatchId;
@@ -215,7 +226,8 @@ export async function executeOperating(tx:CompanyTx,actor:Actor,b:any,clock=new 
  }else if(b.action==='ops.submit'){
   if(!canWrite(actor,member,c,p,config,r.sheet))fail('没有提交该表的权限',403);if(!['draft','returned'].includes(r.status))fail('当前记录状态不能提交',409);
   validateOperatingRows(r.sheet,r.rows,r.rows.map(x=>({id:x.storeId,name:x.storeName})),true,r.template,r.sharedAdSpend);
-  const reviewerLogin=rights.supervisor?.login;if(!reviewerLogin)fail('请先指定有效的项目确认主管');
+  delete r.approvalFlow;const flow=submissionFlow(c,p,uid);if(flow)r.approvalFlow=flow;
+  const reviewerLogin=flow?.steps[0]||rights.supervisor?.login;if(!reviewerLogin)fail('请先指定有效的项目确认主管');
   if(b.submissionBatchId!==undefined){
    const batch=submissionBatchIdSchema.safeParse(b.submissionBatchId);if(!batch.success)fail('经营提交批次编号无效');
    r.submissionBatchId=batch.data;
@@ -226,10 +238,19 @@ export async function executeOperating(tx:CompanyTx,actor:Actor,b:any,clock=new 
   const amendmentReason=text(b.reason,1000,true);
   r={...r,status:'draft',submittedBy:'',submittedName:'',submittedAt:null,reviewerName:'',comment:'',amendmentReason};
  }else{
-  if(r.status!=='submitted')fail('当前记录不在待确认状态',409);const reviewer=operatingReviewerLogin(c,p,r,uid);if(uid!==reviewer||uid===r.submittedBy&&uid!==rights.supervisor?.login)fail('没有该项目经营记录的确认权限',403);
+  if(r.status!=='submitted')fail('当前记录不在待确认状态',409);
+  const reviewer=operatingReviewerLogin(c,p,r,uid);
+  const allowed=r.approvalFlow?routedReview:uid===reviewer&&(uid!==r.submittedBy||uid===rights.supervisor?.login);
+  if(!allowed)fail('没有该项目经营记录的确认权限',403);
   r={...r,status:b.action==='ops.approve'?'approved':'returned',reviewerLogin:uid,reviewerName:actor.owner?'管理员':member!.name,comment:text(b.comment??'',1000)};
   if(b.action==='ops.return'&&!r.comment)fail('请填写退回原因');
+  const next=b.action==='ops.approve'?nextApprovalStep(r.approvalFlow):undefined;
+  if(next){
+   r.approvalFlow=next;r.status='submitted';r.reviewerLogin=next.steps[next.index];
+   if(current.submissionBatchId)r.submissionBatchId=current.submissionBatchId;
+  }
  }
- r.version++;r.updatedAt=clock.toISOString();if(b.action==='ops.approve'){r.publishedVersion=r.version;const{published,...snapshot}=r;r.published=snapshot;config.confirmedProjectName=r.projectName;await recordConfirmedCorrection(tx,c,current.published,snapshot);}
- return write(tx,c,r,actor,member,b.action,clock);
+ if(r.status==='draft')delete r.approvalFlow;
+ r.version++;r.updatedAt=clock.toISOString();if(b.action==='ops.approve'&&r.status==='approved'){r.publishedVersion=r.version;const{published,...snapshot}=r;r.published=snapshot;config.confirmedProjectName=r.projectName;await recordConfirmedCorrection(tx,c,current.published,snapshot);}
+ return write(tx,c,r,actor,member,b.action==='ops.approve'&&r.status==='submitted'?'ops.approveStep':b.action,clock);
 }

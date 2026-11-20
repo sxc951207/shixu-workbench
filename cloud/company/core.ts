@@ -1,4 +1,8 @@
+import {organizationLevelFor} from '../../lib/workbench/organization.ts';
+import {submissionFlow,isCurrentApprover,nextApprovalStep,hasPendingApproval} from './approval-flow.ts';
 import {activeProjects} from './model.ts';
+import {approvalPreview} from '../../lib/workbench/approval-display.ts';
+import {assertMemberCanDeactivate,validatedApprovalChain} from '../../lib/workbench/organization.ts';
 import {registerCompany} from './login-company.ts';
 import {supervisedProjects} from './supervised.ts';
 import {memberLoginPattern,suggestedMemberLogin} from '../../lib/workbench/member-login.ts';
@@ -22,6 +26,7 @@ function progressLeader(c:Company, value:unknown, ownerLogin:string){
  return login;
 }
 export function canConfirmProgress(actor:Actor,c:Company,p:Company['projects'][number]){
+ if(p.approvalFlow)return isCurrentApprover(actor,c,p);
  const uid=actor.owner?'owner':actor.login;
  if(p.status!=='submitted'||!uid||uid===p.submittedBy)return false;
  if(p.progressReviewLogin)return !actor.owner&&p.progressReviewLogin===uid&&c.members.some(m=>m.login===uid&&m.active&&m.roles.includes('leader'));
@@ -33,12 +38,13 @@ export async function executeCompany(tx:CompanyTx,actor:Actor,b:any,clock=new Da
  const{c,member}=await loadCompany(tx,actor,b.companyId),ability=companyAbility(actor,c),uid=actor.owner?'owner':actor.login!;
  if(['member.save','project.create','project.trash','project.untrash','policy'].includes(b.action)&&!actor.owner)fail('只有管理员可管理成员、项目与保存设置',403);
  if(['member.save','project.create','project.trash','project.untrash','policy'].includes(b.action)&&b.revision!==undefined&&b.revision!==c.revision)fail('公司设置已发生变化，请刷新后操作',409);
- if(b.action==='member.save'){const login=loginName(b.login),old=c.members.find(x=>x.login===login),roles=b.roles;if(old&&b.createOnly===true)fail('该登录名已有人使用，可改为“'+suggestedMemberLogin(login,c.members.map(m=>m.login))+'”。',409);if(!Array.isArray(roles)||!roles.length||roles.some(r=>!['employee','supervisor','leader'].includes(r))||new Set(roles).size!==roles.length)fail('角色设置无效');if(!old&&c.members.length>=200)fail('成员数量已达测试版容量');const m:Member={login,name:text(b.name,40,true),roles,managerId:'owner',active:b.active!==false};c.members=c.members.filter(x=>x.login!==login);c.members.push(m);c.revision++;await saveDirectory(tx,c);return{member:m};}
+ if(b.action==='member.save'){const login=loginName(b.login),old=c.members.find(x=>x.login===login),roles=b.roles;if(old&&b.createOnly===true)fail('该登录名已有人使用，可改为“'+suggestedMemberLogin(login,c.members.map(m=>m.login))+'”。',409);if(!Array.isArray(roles)||!roles.length||roles.some(r=>!['employee','supervisor','leader'].includes(r))||new Set(roles).size!==roles.length)fail('角色设置无效');if(!old&&c.members.length>=200)fail('成员数量已达测试版容量');if(old?.active&&b.active===false)assertMemberCanDeactivate(c,login);const m:Member={login,name:text(b.name,40,true),roles,managerId:old?.managerId??'owner',active:b.active!==false};c.members=c.members.filter(x=>x.login!==login);c.members.push(m);c.revision++;await saveDirectory(tx,c);return{member:m};}
  if(b.action==='policy'){if(![30,90,180,365].includes(b.daily))fail('保留份数无效');c.policy={daily:b.daily,monthly:0,yearly:0};c.revision++;await saveDirectory(tx,c);return{ok:true};}
  if(b.action==='view'){
   const supervised=b.scope==='supervised'?supervisedProjects(member):null;
   const scope=supervised?'summary':b.scope||'mine';
-  if(!['mine','review','summary','manage'].includes(scope)||scope==='manage'&&!actor.owner||scope==='review'&&!actor.owner&&!member!.roles.includes('supervisor')&&!(member!.roles.includes('leader')&&activeProjects(c).some(p=>p.progressLeaderLogin===uid))||scope==='summary'&&!supervised&&!actor.owner&&!member!.roles.includes('leader'))fail('没有该视图的权限',403);
+  const progressReviewer=!!member&&activeProjects(c).some(p=>p.approvalChain?.includes(uid)||hasPendingApproval(c,p.id,uid)||isCurrentApprover(actor,c,p)||member.roles.includes('leader')&&p.progressLeaderLogin===uid);
+  if(!['mine','review','summary','manage'].includes(scope)||scope==='manage'&&!actor.owner||scope==='review'&&!actor.owner&&!member!.roles.includes('supervisor')&&!progressReviewer||scope==='summary'&&!supervised&&!actor.owner&&!member!.roles.includes('leader'))fail('没有该视图的权限',403);
   const selected=activeProjects(c).filter(h=>{
    if(scope==='manage')return true;
    if(scope==='review')return canConfirmProgress(actor,c,h);
@@ -52,11 +58,17 @@ export async function executeCompany(tx:CompanyTx,actor:Actor,b:any,clock=new Da
   const page=Number.isSafeInteger(b.page)&&b.page>=0?b.page:0,projects=[];
   for(const h of selected.slice(page*20,page*20+20)){
    const p=await projectAt(tx,c,h.id);
-   projects.push(scope==='summary'?p.published:p);
+   if(scope==='review'&&(p.version!==h.version||!canConfirmProgress(actor,c,p)))fail('待确认项目与目录不一致，请刷新',409);
+   if(scope==='summary'){projects.push(p.published);continue;}
+   const supervisorOwner=c.members.some(m=>m.login===p.ownerLogin&&m.roles.includes('supervisor'));
+   const assigned=p.status==='submitted'?p.progressReviewLogin:supervisorOwner&&p.progressLeaderLogin;
+   const legacy=assigned||(p.reviewerLogin===(p.status==='submitted'?p.submittedBy:p.ownerLogin)?'owner':p.reviewerLogin);
+   const recipients=p.status==='submitted'?[legacy]:p.approvalChain||[legacy];
+   projects.push({...p,approvalPreview:approvalPreview(c.members,recipients)});
   }
-  return{company:{id:c.id,name:c.name,revision:c.revision,policy:c.policy,members:actor.owner?c.members:[],projectCount:supervised?selected.length:activeProjects(c).length,...(scope==='manage'&&actor.owner?{trashed:c.projects.filter(p=>p.deletedAt).map(({id,name,version,deletedAt})=>({id,name,version,deletedAt}))}:{})},me:{login:uid,name:actor.owner?'管理员':member!.name,roles:actor.owner?['admin','supervisor','leader']:member!.roles,progressReviewer:!!member?.roles.includes('leader')&&activeProjects(c).some(p=>p.progressLeaderLogin===uid)},projects,total:selected.length,page};
+  return{company:{id:c.id,name:c.name,revision:c.revision,policy:c.policy,members:actor.owner?c.members:[],projectCount:supervised?selected.length:activeProjects(c).length,...(scope==='manage'&&actor.owner?{trashed:c.projects.filter(p=>p.deletedAt).map(({id,name,version,deletedAt})=>({id,name,version,deletedAt}))}:{})},me:{...(member&&c.organizationLevels?{organizationLevel:c.organizationLevels.find(level=>level.id===organizationLevelFor(c,member))?.name}:{}),login:uid,name:actor.owner?'管理员':member!.name,roles:actor.owner?['admin','supervisor','leader']:member!.roles,progressReviewer},projects,total:selected.length,page};
  }
- if(b.action==='project.create'){if(c.projects.length>=200)fail('项目数量已达测试版容量');const ownerLogin=loginName(b.ownerLogin),reviewerLogin=b.reviewerLogin==='owner'?'owner':loginName(b.reviewerLogin);if(!c.members.some(m=>m.login===ownerLogin&&m.active&&m.roles.some(r=>r==='employee'||r==='supervisor')))fail('请指定有效的项目负责人');if(reviewerLogin!=='owner'&&!c.members.some(m=>m.login===reviewerLogin&&m.active&&m.roles.includes('supervisor')))fail('请指定有效的确认主管');if(!Array.isArray(b.participants)||b.participants.some((u:unknown)=>!c.members.some(m=>m.login===u&&m.active)))fail('项目参与人无效');const leader=progressLeader(c,b.progressLeaderLogin,ownerLogin);const p:Project={...(leader?{progressLeaderLogin:leader}:{}),id:'p_'+randomUUID().replaceAll('-','').slice(0,24),companyId:c.id,name:text(b.name,80,true),ownerLogin,reviewerLogin,participants:[...new Set<string>([ownerLogin,...b.participants])],status:'draft',version:1,publishedVersion:0,submittedBy:'',progress:0,achievement:'',risk:'',next:'',createdAt:clock.toISOString(),updatedAt:clock.toISOString(),comment:'',reviewerName:'',published:null};return writeProject(tx,c,p,b.action,actor,clock);}
+ if(b.action==='project.create'){if(c.projects.length>=200)fail('项目数量已达测试版容量');const ownerLogin=loginName(b.ownerLogin),reviewerLogin=b.reviewerLogin==='owner'?'owner':loginName(b.reviewerLogin);if(!c.members.some(m=>m.login===ownerLogin&&m.active&&m.roles.some(r=>r==='employee'||r==='supervisor')))fail('请指定有效的项目负责人');if(reviewerLogin!=='owner'&&!c.members.some(m=>m.login===reviewerLogin&&m.active&&m.roles.includes('supervisor')))fail('请指定有效的确认主管');if(!Array.isArray(b.participants)||b.participants.some((u:unknown)=>!c.members.some(m=>m.login===u&&m.active)))fail('项目参与人无效');const leader=progressLeader(c,b.progressLeaderLogin,ownerLogin);const p:Project={...(b.approvalChain!==undefined?{approvalChain:validatedApprovalChain(c,b.approvalChain)}:{}),...(leader?{progressLeaderLogin:leader}:{}),id:'p_'+randomUUID().replaceAll('-','').slice(0,24),companyId:c.id,name:text(b.name,80,true),ownerLogin,reviewerLogin,participants:[...new Set<string>([ownerLogin,...b.participants])],status:'draft',version:1,publishedVersion:0,submittedBy:'',progress:0,achievement:'',risk:'',next:'',createdAt:clock.toISOString(),updatedAt:clock.toISOString(),comment:'',reviewerName:'',published:null};return writeProject(tx,c,p,b.action,actor,clock);}
  if(b.action==='project.trash'||b.action==='project.untrash'){
   const project=await projectAt(tx,c,b.id,true),removing=b.action==='project.trash';
   if(project.version!==b.version||c.revision!==b.revision||!!project.deletedAt===removing)fail('项目或关联数据已发生变化，请刷新后操作',409);
@@ -73,10 +85,38 @@ export async function executeCompany(tx:CompanyTx,actor:Actor,b:any,clock=new Da
   delete p.progressLeaderLogin;if(!onlyLeader||p.status!=='approved')delete p.progressReviewLogin;if(leader)p.progressLeaderLogin=leader;
   if(onlyLeader){if(p.status==='submitted'&&leader&&c.members.some(m=>m.login===p.submittedBy&&m.roles.includes('supervisor')))p.progressReviewLogin=leader;}
   else p={...p,name,ownerLogin,reviewerLogin,participants,status:'draft',comment:'项目设置已调整，请重新提交确认',reviewerName:''};}
- else if(b.action==='project.submit'){if(!ability.can('submit',projectSubject(p))||!p.achievement)fail('没有提交权限或尚未填写项目成果',403);if(p.ownerLogin!==uid)fail('请由项目负责人提交',403);delete p.progressReviewLogin;if(p.progressLeaderLogin&&member?.roles.includes('supervisor'))p.progressReviewLogin=progressLeader(c,p.progressLeaderLogin,uid);event='SUBMIT';p.submittedAt=clock.toISOString();p.submittedBy=uid;p.comment='';p.reviewerName='';}
+ else if(b.action==='project.submit'){
+  if(!ability.can('submit',projectSubject(p))||!p.achievement)fail('没有提交权限或尚未填写项目成果',403);
+  if(p.ownerLogin!==uid)fail('请由项目负责人提交',403);
+  delete p.progressReviewLogin;
+  delete p.approvalFlow;
+  const flow=submissionFlow(c,p,uid);
+  if(flow)p.approvalFlow=flow;
+  else if(p.progressLeaderLogin&&member?.roles.includes('supervisor'))p.progressReviewLogin=progressLeader(c,p.progressLeaderLogin,uid);
+  event='SUBMIT';p.submittedAt=clock.toISOString();p.submittedBy=uid;p.comment='';p.reviewerName='';
+ }
  else if(b.action==='project.amend'){if(!ability.can('amend',projectSubject(p)))fail('没有更正该项目的权限',403);event='AMEND';p.submittedAt=null;p.comment='';}
- else if(b.action==='project.approve'||b.action==='project.return'){if(!canConfirmProgress(actor,c,p))fail('没有该项目确认权限或不能确认本人提交',403);p.comment=text(b.comment,1000,b.action==='project.return');p.reviewerName=actor.owner?'管理员':member!.name;event=b.action==='project.approve'?'APPROVE':'RETURN';}
+ else if(b.action==='project.approve'||b.action==='project.return'){
+  if(!canConfirmProgress(actor,c,p))fail('没有该项目确认权限或不能确认本人提交',403);
+  p.comment=text(b.comment,1000,b.action==='project.return');
+  p.reviewerName=actor.owner?'管理员':member!.name;
+  const next=b.action==='project.approve'?nextApprovalStep(p.approvalFlow):undefined;
+  if(next)p.approvalFlow=next;
+  else event=b.action==='project.approve'?'APPROVE':'RETURN';
+ }
  else if(b.action==='project.restore'){if(!actor.owner)fail('只有管理员可恢复项目历史',403);if(!Number.isSafeInteger(b.targetVersion)||b.targetVersion<1||b.targetVersion>p.version)fail('历史版本无效');const doc=await tx.get<{payload:string;checksum:string}>(versionKey(p.id,b.targetVersion),true);if(!doc||digest(doc.payload)!==doc.checksum)fail('备份完整性校验失败');const old=(JSON.parse(doc.payload) as Version).project;if(old.id!==p.id||old.companyId!==c.id)fail('备份关系校验失败');p={...p,progress:old.progress,achievement:old.achievement,risk:old.risk,next:old.next,work:{items:old.work?.items||[],nudges:(p.work?.nudges||[]).filter(n=>n.kind!=='item'||old.work?.items.some(i=>i.id===n.targetId))},submittedAt:null,status:'draft',comment:'已恢复历史内容，需重新提交确认',reviewerName:''};}
  else fail('不支持的公司操作');
- if(event){const status=transitionStage(p.status,event);if(status===p.status)fail('当前状态不能执行该操作',409);p.status=status;}p.version++;p.updatedAt=clock.toISOString();if(b.action==='project.approve'){const{published,...snapshot}=p;p.published={...snapshot,publishedVersion:p.version};p.publishedVersion=p.version;}return writeProject(tx,c,p,b.action,actor,clock);
+ if(event){
+  const status=transitionStage(p.status,event);
+  if(status===p.status)fail('当前状态不能执行该操作',409);
+  p.status=status;
+ }
+ if(p.status==='draft')delete p.approvalFlow;
+ p.version++;p.updatedAt=clock.toISOString();
+ if(b.action==='project.approve'&&p.status==='approved'){
+  const{published,...snapshot}=p;
+  p.published={...snapshot,publishedVersion:p.version};p.publishedVersion=p.version;
+ }
+ const action=b.action==='project.approve'&&p.status==='submitted'?'project.approveStep':b.action;
+ return writeProject(tx,c,p,action,actor,clock);
 }
